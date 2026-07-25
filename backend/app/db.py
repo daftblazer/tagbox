@@ -63,9 +63,18 @@ def get_conn() -> sqlite3.Connection:
     conn = getattr(_local, "conn", None)
     if conn is None:
         config.ensure_data_dirs()
-        conn = sqlite3.connect(config.DB_PATH, check_same_thread=False)
+        # Each thread gets its own connection (FastAPI runs sync endpoints and
+        # background tasks in a thread pool), so concurrent writes — e.g. a
+        # library scan committing while another request inserts a new library
+        # row — are common, not an edge case. WAL lets readers proceed without
+        # blocking on a writer, and a generous busy_timeout makes writer-vs-writer
+        # contention retry instead of immediately raising "database is locked".
+        conn = sqlite3.connect(config.DB_PATH, check_same_thread=False, timeout=30)
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA foreign_keys = ON")
+        conn.execute("PRAGMA journal_mode = WAL")
+        conn.execute("PRAGMA synchronous = NORMAL")
+        conn.execute("PRAGMA busy_timeout = 30000")
         _local.conn = conn
     return conn
 
