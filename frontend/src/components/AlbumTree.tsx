@@ -20,6 +20,13 @@ function posLabel(t: Track): string {
   return (t.disc_num > 1 ? t.disc_num + '.' : '') + String(t.track_num).padStart(2, '0')
 }
 
+function formatOf(filename: string): string {
+  const dot = filename.lastIndexOf('.')
+  return dot === -1 ? '' : filename.slice(dot + 1).toUpperCase()
+}
+
+const TRACK_COLUMNS = '44px 1fr 84px'
+
 export function AlbumTree({ pal, accent, albums, selectMode, selectedIds, onToggleSelect, onOpen }: Props) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const [tracksByAlbum, setTracksByAlbum] = useState<Record<string, TrackState>>({})
@@ -134,26 +141,51 @@ export function AlbumTree({ pal, accent, albums, selectMode, selectedIds, onTogg
             </div>
 
             {isOpen && (
-              <div style={{ paddingLeft: TRACK_INDENT, paddingTop: 6 }}>
+              <div style={{ paddingLeft: TRACK_INDENT, paddingRight: 14, paddingTop: 10 }}>
                 {tracks === 'loading' && <div style={{ fontSize: 12.5, color: pal.textFaint, padding: '6px 10px' }}>Loading…</div>}
                 {tracks === 'error' && (
                   <div style={{ fontSize: 12.5, color: 'oklch(65% 0.19 25)', padding: '6px 10px' }}>Failed to load tracks.</div>
                 )}
-                {Array.isArray(tracks) &&
-                  tracks.map((t) => (
-                    <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 10px' }}>
-                      <div style={{ width: 32, flex: 'none', fontSize: 12, fontFamily: 'ui-monospace,monospace', color: pal.textFaint }}>
-                        {posLabel(t)}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 13.5, color: pal.textSecondary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                        }}
-                      >
-                        {t.title}
+                {Array.isArray(tracks) && tracks.length > 0 && (
+                  <div>
+                    <div
+                      style={{
+                        display: 'grid', gridTemplateColumns: TRACK_COLUMNS, gap: 10, padding: '0 10px 6px',
+                        borderBottom: `1px solid ${pal.divider}`, marginBottom: 2,
+                      }}
+                    >
+                      <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.06em', color: pal.textFaint }}>#</div>
+                      <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.06em', color: pal.textFaint }}>TITLE</div>
+                      <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.06em', color: pal.textFaint, textAlign: 'right' }}>
+                        FORMAT
                       </div>
                     </div>
-                  ))}
+                    {tracks.map((t) => (
+                      <div
+                        key={t.id}
+                        style={{
+                          display: 'grid', gridTemplateColumns: TRACK_COLUMNS, gap: 10, alignItems: 'center',
+                          padding: '7px 10px', borderRadius: 6,
+                        }}
+                      >
+                        <div style={{ fontSize: 12, fontFamily: 'ui-monospace,monospace', color: pal.textFaint }}>{posLabel(t)}</div>
+                        <div style={{ fontSize: 13.5, color: pal.textSecondary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {t.title}
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <span
+                            style={{
+                              fontSize: 10.5, fontWeight: 700, letterSpacing: '.02em', padding: '3px 8px', borderRadius: 4,
+                              background: pal.nestedPanelBg, color: pal.textSecondary, border: `1px solid ${pal.nestedPanelBorder}`,
+                            }}
+                          >
+                            {formatOf(t.filename)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
