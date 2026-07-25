@@ -107,8 +107,10 @@ export function EditorDrawer({ albumId, pal, accent, onClose, onSaved }: Props) 
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: pal.overlayBg, zIndex: 10 }} />
       <div
         style={{
-          position: 'absolute', top: 0, right: 0, bottom: 0, width: 460, background: pal.drawerBg,
-          borderLeft: `1px solid ${pal.drawerBorder}`, zIndex: 11, display: 'flex', flexDirection: 'column',
+          position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
+          width: 560, maxWidth: '90vw', maxHeight: '85vh', background: pal.drawerBg,
+          border: `1px solid ${pal.drawerBorder}`, borderRadius: 12, boxShadow: `0 20px 60px ${pal.shadow}`,
+          zIndex: 11, display: 'flex', flexDirection: 'column', overflow: 'hidden',
         }}
       >
         <div style={{ flex: 'none', display: 'flex', alignItems: 'center', padding: '16px 20px', borderBottom: `1px solid ${pal.headerBorder}` }}>
