@@ -1,0 +1,15 @@
+services:
+  tagbox:
+    build: .
+    image: tagbox:latest
+    container_name: tagbox
+    restart: unless-stopped
+    ports:
+      - "8420:8000"
+    volumes:
+      - ./config:/config:ro,Z
+      - ./data:/data:Z
+      # Mount each library's root folder at the path referenced by its `path:`
+      # entry in config/libraries.yaml. Add one line per library.
+      - /path/to/your/music:/libraries/music:rw,Z
+      - /path/to/your/vgm:/libraries/vgm:rw,Z

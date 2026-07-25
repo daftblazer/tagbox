@@ -1,0 +1,13 @@
+# Copy this file to config/libraries.yaml and point each entry at a root
+# folder. Each library is browsed/edited independently in the UI.
+#
+# When running via Docker, `path` should be the path *inside the container*
+# (see the volume mounts in docker-compose.yml) — not the path on the host.
+
+libraries:
+  - id: music
+    name: Music
+    path: /libraries/music
+  - id: vgm
+    name: Video Game Music
+    path: /libraries/vgm

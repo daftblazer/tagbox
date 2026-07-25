@@ -1,0 +1,33 @@
+# Runtime data (SQLite index + cover cache) and per-install config
+/data/
+/config/libraries.yaml
+
+# Local test fixtures generated during development
+/dev-library/
+
+# Backend
+backend/.venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/**/*.pyc
+backend/.pytest_cache/
+backend/**/*.egg-info/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Claude Code local (machine-specific) settings
+.claude/settings.local.json
+
+# Editors / OS
+.DS_Store
+*.swp
+.vscode/
+.idea/
+
+# Env files that might carry secrets
+.env
+.env.*
+!.env.example

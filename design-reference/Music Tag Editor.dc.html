@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  @font-face { font-family: system-ui; }
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  ::placeholder { color: var(--ph-color, oklch(55% 0.01 250)); }
+  input, textarea { font-family: inherit; }
+</style>
+<script src="./image-slot.js"></script>
+</helmet>
+
+<div style="display:flex; height:100vh; width:100%; background:{{ pal.appBg }}; color:{{ pal.textPrimary }}; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif; overflow:hidden; position:relative;">
+
+  <div style="width:230px; flex:none; background:{{ pal.sidebarBg }}; border-right:1px solid {{ pal.sidebarBorder }}; display:flex; flex-direction:column; padding:18px 14px;">
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:8px;">
+      <div>
+        <div style="font-size:16px; font-weight:700; letter-spacing:-0.01em; padding:0 4px 2px;">Tagbox</div>
+        <div style="font-size:11.5px; color:{{ pal.textMuted }}; padding:0 4px 20px;">self-hosted tag editor</div>
+      </div>
+      <div onClick="{{ toggleTheme }}" title="Toggle light/dark" style="cursor:pointer; width:28px; height:28px; flex:none; border-radius:7px; border:1px solid {{ pal.inputBorder }}; background:{{ pal.cardBg }}; display:flex; align-items:center; justify-content:center; font-size:13px;">{{ themeIcon }}</div>
+    </div>
+
+    <div style="font-size:10.5px; font-weight:600; letter-spacing:.08em; color:{{ pal.textFaint }}; padding:0 4px 8px;">LIBRARIES</div>
+    <sc-for list="{{ libraries }}" as="lib" hint-placeholder-count="2">
+      <div onClick="{{ lib.select }}" style="display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:7px; cursor:pointer; margin-bottom:2px; background:{{ lib.bg }};">
+        <div style="width:8px; height:8px; border-radius:50%; flex:none; background:{{ lib.dot }};"></div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:13px; font-weight:{{ lib.weight }}; color:{{ lib.textColor }}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ lib.name }}</div>
+        </div>
+        <div style="font-size:11px; color:{{ pal.textFaint }};">{{ lib.albumCount }}</div>
+      </div>
+    </sc-for>
+
+    <div style="margin-top:14px; padding:10px 10px; background:{{ pal.nestedPanelBg }}; border-radius:7px; border:1px solid {{ pal.nestedPanelBorder }};">
+      <div style="font-size:10px; font-weight:600; letter-spacing:.06em; color:{{ pal.textFaint }}; margin-bottom:4px;">ROOT FOLDER</div>
+      <div style="font-size:11.5px; font-family:ui-monospace,'SF Mono',Menlo,monospace; color:{{ pal.textSecondary }}; word-break:break-all; line-height:1.5;">{{ currentLibrary.path }}</div>
+    </div>
+
+    <div style="flex:1;"></div>
+    <div style="font-size:12px; color:{{ pal.textFainter }}; padding:9px 10px; border:1px dashed {{ pal.dashedBorder }}; border-radius:7px; text-align:center; cursor:default;">+ Add library</div>
+  </div>
+
+  <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
+
+    <div style="flex:none; display:flex; align-items:center; gap:14px; padding:14px 22px; border-bottom:1px solid {{ pal.headerBorder }};">
+      <div style="display:flex; align-items:center; gap:6px; font-size:13.5px; min-width:0;">
+        <span onClick="{{ backToArtists }}" style="color:{{ pal.textSecondary }}; cursor:pointer;">{{ currentLibrary.name }}</span>
+        <sc-if value="{{ selectedArtistName }}">
+          <span style="color:{{ pal.textFainter }};">/</span>
+          <span style="color:{{ pal.textPrimary }}; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ selectedArtistName }}</span>
+        </sc-if>
+      </div>
+
+      <div style="flex:1;"></div>
+
+      <input value="{{ search }}" onChange="{{ onSearchChange }}" placeholder="Search artists, albums…" style="width:220px; background:{{ pal.inputBg }}; border:1px solid {{ pal.inputBorder }}; border-radius:7px; padding:7px 10px; font-size:12.5px; color:{{ pal.textPrimary }}; outline:none;"></input>
+
+      <div style="display:flex; background:{{ pal.tabBarBg }}; border:1px solid {{ pal.tabBarBorder }}; border-radius:7px; padding:2px;">
+        <div onClick="{{ setViewArtists }}" style="padding:6px 12px; font-size:12.5px; border-radius:5px; cursor:pointer; background:{{ tabBg.artists }}; color:{{ tabColor.artists }};">Artists</div>
+        <div onClick="{{ setViewAlbums }}" style="padding:6px 12px; font-size:12.5px; border-radius:5px; cursor:pointer; background:{{ tabBg.albums }}; color:{{ tabColor.albums }};">Albums</div>
+        <div onClick="{{ setViewFolders }}" style="padding:6px 12px; font-size:12.5px; border-radius:5px; cursor:pointer; background:{{ tabBg.folders }}; color:{{ tabColor.folders }};">Folders</div>
+      </div>
+
+      <div onClick="{{ toggleSelectMode }}" style="font-size:12.5px; padding:7px 13px; border-radius:7px; cursor:pointer; border:1px solid {{ selectModeBorder }}; background:{{ selectModeBg }}; color:{{ selectModeColor }};">{{ selectModeLabel }}</div>
+    </div>
+
+    <div style="flex:1; overflow-y:auto; padding:22px;">
+
+      <sc-if value="{{ showArtistGrid }}" hint-placeholder-val="{{ true }}">
+        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(190px,1fr)); gap:18px;">
+          <sc-for list="{{ artistCards }}" as="artist" hint-placeholder-count="4">
+            <div onClick="{{ artist.open }}" style="cursor:pointer; background:{{ pal.cardBg }}; border:1px solid {{ pal.cardBorder }}; border-radius:10px; overflow:hidden;">
+              <div style="width:100%; aspect-ratio:1;"><image-slot id="{{ artist.coverId }}" shape="rect" placeholder="{{ artist.name }}"></image-slot></div>
+              <div style="padding:11px 12px;">
+                <div style="font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ artist.name }}</div>
+                <div style="font-size:11.5px; color:{{ pal.textMuted }}; margin-top:2px;">{{ artist.albumCountLabel }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showAlbumGrid }}">
+        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(190px,1fr)); gap:18px;">
+          <sc-for list="{{ albumCards }}" as="album" hint-placeholder-count="6">
+            <div style="position:relative; background:{{ pal.cardBg }}; border:1px solid {{ album.border }}; border-radius:10px; overflow:hidden;">
+              <sc-if value="{{ selectMode }}">
+                <div onClick="{{ album.toggleSelect }}" style="position:absolute; top:8px; left:8px; z-index:2; width:20px; height:20px; border-radius:5px; background:{{ album.checkBg }}; border:1.5px solid {{ album.checkBorder }}; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                  <sc-if value="{{ album.selected }}"><div style="color:#fff; font-size:12px; font-weight:700;">✓</div></sc-if>
+                </div>
+              </sc-if>
+              <div onClick="{{ album.click }}" style="width:100%; aspect-ratio:1; cursor:pointer;"><image-slot id="{{ album.coverId }}" shape="rect" placeholder="{{ album.title }}"></image-slot></div>
+              <div onClick="{{ album.click }}" style="padding:11px 12px; cursor:pointer;">
+                <div style="font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ album.title }}</div>
+                <div style="font-size:11.5px; color:{{ pal.textMuted2 }}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ album.artist }} · {{ album.year }}</div>
+                <div style="display:flex; gap:5px; margin-top:7px; flex-wrap:wrap;">
+                  <sc-for list="{{ album.genreChips }}" as="g" hint-placeholder-count="2">
+                    <div style="font-size:10px; padding:2.5px 7px; background:{{ pal.chipBg }}; border-radius:100px; color:{{ pal.chipText }};">{{ g }}</div>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showFolders }}">
+        <div style="max-width:640px;">
+          <sc-for list="{{ folderArtists }}" as="fa" hint-placeholder-count="4">
+            <div style="margin-bottom:2px;">
+              <div onClick="{{ fa.toggle }}" style="display:flex; align-items:center; gap:8px; padding:9px 10px; border-radius:7px; cursor:pointer; background:{{ pal.cardBg }};">
+                <div style="width:12px; font-size:11px; color:{{ pal.textMuted }}; transform:{{ fa.chevronRotate }};">▶</div>
+                <div style="font-size:13px; font-family:ui-monospace,'SF Mono',Menlo,monospace;">{{ fa.name }}/</div>
+                <div style="flex:1;"></div>
+                <div style="font-size:11px; color:{{ pal.textFaint }};">{{ fa.albumCountLabel }}</div>
+              </div>
+              <sc-if value="{{ fa.expanded }}">
+                <div style="padding-left:28px;">
+                  <sc-for list="{{ fa.albums }}" as="al" hint-placeholder-count="2">
+                    <div onClick="{{ al.click }}" style="display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:6px; cursor:pointer;">
+                      <div style="width:12px; font-size:11px; color:{{ pal.textFainter }};">–</div>
+                      <div style="font-size:12.5px; font-family:ui-monospace,'SF Mono',Menlo,monospace; color:{{ pal.textSecondary }};">{{ al.title }}/</div>
+                      <div style="flex:1;"></div>
+                      <div style="font-size:11px; color:{{ pal.textFaint }};">{{ al.trackCountLabel }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+    </div>
+  </div>
+
+  <sc-if value="{{ editorOpen }}">
+    <div onClick="{{ closeEditor }}" style="position:absolute; inset:0; background:{{ pal.overlayBg }}; z-index:10;"></div>
+    <div style="position:absolute; top:0; right:0; bottom:0; width:460px; background:{{ pal.drawerBg }}; border-left:1px solid {{ pal.drawerBorder }}; z-index:11; display:flex; flex-direction:column;">
+      <div style="flex:none; display:flex; align-items:center; padding:16px 20px; border-bottom:1px solid {{ pal.headerBorder }};">
+        <div style="font-size:14.5px; font-weight:600;">Edit album tags</div>
+        <div style="flex:1;"></div>
+        <div onClick="{{ closeEditor }}" style="cursor:pointer; color:{{ pal.textMuted }}; font-size:18px; line-height:1;">×</div>
+      </div>
+      <div style="flex:1; overflow-y:auto; padding:20px;">
+        <div style="display:flex; gap:16px; margin-bottom:20px;">
+          <div style="width:120px; height:120px; flex:none;"><image-slot id="{{ editForm.coverId }}" shape="rounded" radius="8" placeholder="Cover art"></image-slot></div>
+          <div style="flex:1; display:flex; flex-direction:column; gap:10px; min-width:0;">
+            <div>
+              <div style="font-size:10.5px; color:{{ pal.textFaint }}; margin-bottom:4px;">ALBUM TITLE</div>
+              <input value="{{ editForm.title }}" onChange="{{ editForm.setTitle }}" style="width:100%; background:{{ pal.inputBg }}; border:1px solid {{ pal.inputBorder }}; border-radius:6px; padding:7px 9px; font-size:13px; color:inherit; outline:none;"></input>
+            </div>
+            <div>
+              <div style="font-size:10.5px; color:{{ pal.textFaint }}; margin-bottom:4px;">YEAR</div>
+              <input value="{{ editForm.year }}" onChange="{{ editForm.setYear }}" style="width:100px; background:{{ pal.inputBg }}; border:1px solid {{ pal.inputBorder }}; border-radius:6px; padding:7px 9px; font-size:13px; color:inherit; outline:none;"></input>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+          <div>
+            <div style="font-size:10.5px; color:{{ pal.textFaint }}; margin-bottom:4px;">ARTIST</div>
+            <input value="{{ editForm.artist }}" onChange="{{ editForm.setArtist }}" style="width:100%; background:{{ pal.inputBg }}; border:1px solid {{ pal.inputBorder }}; border-radius:6px; padding:7px 9px; font-size:13px; color:inherit; outline:none;"></input>
+          </div>
+          <div>
+            <div style="font-size:10.5px; color:{{ pal.textFaint }}; margin-bottom:4px;">ALBUM ARTIST</div>
+            <input value="{{ editForm.albumArtist }}" onChange="{{ editForm.setAlbumArtist }}" style="width:100%; background:{{ pal.inputBg }}; border:1px solid {{ pal.inputBorder }}; border-radius:6px; padding:7px 9px; font-size:13px; color:inherit; outline:none;"></input>
+          </div>
+        </div>
+
+        <div onClick="{{ editForm.toggleCompilation }}" style="display:flex; align-items:center; gap:9px; margin-bottom:18px; cursor:pointer;">
+          <div style="width:16px; height:16px; border-radius:4px; border:1.5px solid {{ pal.checkboxBorderDefault }}; background:{{ editForm.compBg }}; display:flex; align-items:center; justify-content:center;">
+            <sc-if value="{{ editForm.compilation }}"><div style="color:#fff; font-size:10.5px; font-weight:700;">✓</div></sc-if>
+          </div>
+          <div style="font-size:12.5px; color:{{ pal.textSecondary }};">This is a compilation album</div>
+        </div>
+
+        <div style="margin-bottom:18px;">
+          <div style="font-size:10.5px; color:{{ pal.textFaint }}; margin-bottom:6px;">GENRE</div>
+          <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;">
+            <sc-for list="{{ editForm.genreChips }}" as="g" hint-placeholder-count="2">
+              <div style="display:flex; align-items:center; gap:5px; font-size:11.5px; padding:4px 6px 4px 10px; background:{{ pal.chipBg }}; border-radius:100px;">
+                <span>{{ g.label }}</span>
+                <span onClick="{{ g.remove }}" style="cursor:pointer; color:{{ pal.textMuted }}; font-size:13px; line-height:1;">×</span>
+              </div>
+            </sc-for>
+          </div>
+          <input value="{{ editForm.genreInput }}" onChange="{{ editForm.setGenreInput }}" onKeyDown="{{ editForm.genreKeyDown }}" placeholder="Type a genre and press Enter" style="width:100%; background:{{ pal.inputBg }}; border:1px solid {{ pal.inputBorder }}; border-radius:6px; padding:7px 9px; font-size:12.5px; color:inherit; outline:none;"></input>
+        </div>
+
+        <div style="margin-bottom:20px;">
+          <div style="font-size:10.5px; color:{{ pal.textFaint }}; margin-bottom:4px;">COMMENTS</div>
+          <textarea value="{{ editForm.comments }}" onChange="{{ editForm.setComments }}" rows="2" style="width:100%; background:{{ pal.inputBg }}; border:1px solid {{ pal.inputBorder }}; border-radius:6px; padding:7px 9px; font-size:12.5px; color:inherit; outline:none; resize:vertical;"></textarea>
+        </div>
+
+        <div style="font-size:10.5px; color:{{ pal.textFaint }}; margin-bottom:8px;">TRACKS</div>
+        <div style="border:1px solid {{ pal.cardBorder }}; border-radius:8px; overflow:hidden;">
+          <sc-for list="{{ editForm.tracks }}" as="t" hint-placeholder-count="4">
+            <div style="display:flex; align-items:center; gap:8px; padding:7px 10px; border-bottom:1px solid {{ pal.divider }};">
+              <div style="width:34px; font-size:11.5px; font-family:ui-monospace,monospace; color:{{ pal.textFaint }};">{{ t.posLabel }}</div>
+              <input value="{{ t.title }}" onChange="{{ t.setTitle }}" style="flex:1; background:transparent; border:none; font-size:12.5px; color:inherit; outline:none; padding:3px 4px; border-radius:4px;"></input>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="flex:none; display:flex; gap:10px; padding:16px 20px; border-top:1px solid {{ pal.headerBorder }};">
+        <div onClick="{{ closeEditor }}" style="flex:1; text-align:center; padding:9px; border-radius:7px; font-size:13px; cursor:pointer; border:1px solid {{ pal.inputBorder }}; color:{{ pal.textSecondary }};">Cancel</div>
+        <div onClick="{{ saveEditor }}" style="flex:1; text-align:center; padding:9px; border-radius:7px; font-size:13px; cursor:pointer; background:{{ activeAccent }}; color:oklch(15% 0.01 250); font-weight:600;">Save changes</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ selectedCount }}">
+    <div style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); z-index:9; display:flex; align-items:center; gap:14px; background:{{ pal.cardBg }}; border:1px solid {{ pal.drawerBorder }}; border-radius:12px; padding:11px 16px; box-shadow:0 8px 24px {{ pal.shadow }};">
+      <div style="font-size:13px; color:{{ pal.textSecondary }};">{{ selectedCountLabel }} selected</div>
+      <div onClick="{{ clearSelection }}" style="font-size:12.5px; color:{{ pal.textMuted }}; cursor:pointer;">Clear</div>
+      <div onClick="{{ openBulkEdit }}" style="font-size:12.5px; font-weight:600; padding:8px 15px; border-radius:8px; background:{{ activeAccent }}; color:oklch(15% 0.01 250); cursor:pointer;">Edit tags</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ bulkEditOpen }}">
+    <div onClick="{{ closeBulkEdit }}" style="position:absolute; inset:0; background:{{ pal.overlayBg }}; z-index:12;"></div>
+    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:13; width:420px; background:{{ pal.drawerBg }}; border:1px solid {{ pal.drawerBorder }}; border-radius:12px; box-shadow:0 20px 60px {{ pal.shadow }}; padding:22px;">
+      <div style="font-size:14.5px; font-weight:600; margin-bottom:4px;">Bulk edit {{ selectedCountLabel }} albums</div>
+      <div style="font-size:11.5px; color:{{ pal.textFaint }}; margin-bottom:18px;">Leave a field blank to keep each album's existing value.</div>
+
+      <div style="display:flex; gap:14px; margin-bottom:16px;">
+        <div style="width:84px; height:84px; flex:none;"><image-slot id="bulk-cover" shape="rounded" radius="8" placeholder="Apply cover to all"></image-slot></div>
+        <div style="flex:1; display:flex; flex-direction:column; gap:10px;">
+          <div>
+            <div style="font-size:10.5px; color:{{ pal.textFaint }}; margin-bottom:4px;">ALBUM ARTIST</div>
+            <input value="{{ bulkForm.albumArtist }}" onChange="{{ bulkForm.setAlbumArtist }}" placeholder="Unchanged" style="width:100%; background:{{ pal.inputBg }}; border:1px solid {{ pal.inputBorder }}; border-radius:6px; padding:7px 9px; font-size:12.5px; color:inherit; outline:none;"></input>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <div style="font-size:10.5px; color:{{ pal.textFaint }}; margin-bottom:6px;">GENRE — add to all selected</div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;">
+          <sc-for list="{{ bulkForm.genreChips }}" as="g" hint-placeholder-count="1">
+            <div style="display:flex; align-items:center; gap:5px; font-size:11.5px; padding:4px 6px 4px 10px; background:{{ pal.chipBg }}; border-radius:100px;">
+              <span>{{ g.label }}</span>
+              <span onClick="{{ g.remove }}" style="cursor:pointer; color:{{ pal.textMuted }}; font-size:13px; line-height:1;">×</span>
+            </div>
+          </sc-for>
+        </div>
+        <input value="{{ bulkForm.genreInput }}" onChange="{{ bulkForm.setGenreInput }}" onKeyDown="{{ bulkForm.genreKeyDown }}" placeholder="Type a genre and press Enter" style="width:100%; background:{{ pal.inputBg }}; border:1px solid {{ pal.inputBorder }}; border-radius:6px; padding:7px 9px; font-size:12.5px; color:inherit; outline:none;"></input>
+      </div>
+
+      <div style="margin-bottom:20px;">
+        <div style="font-size:10.5px; color:{{ pal.textFaint }}; margin-bottom:4px;">COMMENTS</div>
+        <textarea value="{{ bulkForm.comments }}" onChange="{{ bulkForm.setComments }}" placeholder="Unchanged" rows="2" style="width:100%; background:{{ pal.inputBg }}; border:1px solid {{ pal.inputBorder }}; border-radius:6px; padding:7px 9px; font-size:12.5px; color:inherit; outline:none; resize:vertical;"></textarea>
+      </div>
+
+      <div style="display:flex; gap:10px;">
+        <div onClick="{{ closeBulkEdit }}" style="flex:1; text-align:center; padding:9px; border-radius:7px; font-size:13px; cursor:pointer; border:1px solid {{ pal.inputBorder }}; color:{{ pal.textSecondary }};">Cancel</div>
+        <div onClick="{{ applyBulkEdit }}" style="flex:1; text-align:center; padding:9px; border-radius:7px; font-size:13px; cursor:pointer; background:{{ activeAccent }}; color:oklch(15% 0.01 250); font-weight:600;">Apply to {{ selectedCountLabel }}</div>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const LIB_ACCENT = { music: 'oklch(68% 0.13 200)', vgm: 'oklch(70% 0.14 30)' };
+
+const PALETTES = {
+  dark: {
+    appBg: 'oklch(19% 0.012 250)', sidebarBg: 'oklch(16% 0.012 250)', sidebarBorder: 'oklch(30% 0.014 250)',
+    cardBg: 'oklch(22% 0.012 250)', cardBorder: 'oklch(29% 0.012 250)',
+    nestedPanelBg: 'oklch(21% 0.012 250)', nestedPanelBorder: 'oklch(28% 0.012 250)',
+    textPrimary: 'oklch(93% 0.005 250)', textSecondary: 'oklch(78% 0.008 250)', textMuted: 'oklch(60% 0.01 250)',
+    textMuted2: 'oklch(65% 0.01 250)', textFaint: 'oklch(55% 0.01 250)', textFainter: 'oklch(50% 0.01 250)',
+    inputBg: 'oklch(24% 0.012 250)', inputBorder: 'oklch(33% 0.012 250)',
+    chipBg: 'oklch(27% 0.014 250)', chipText: 'oklch(75% 0.01 250)',
+    overlayBg: 'oklch(10% 0.01 250 / 0.55)', drawerBg: 'oklch(20% 0.012 250)', drawerBorder: 'oklch(32% 0.012 250)',
+    headerBorder: 'oklch(28% 0.012 250)', divider: 'oklch(26% 0.012 250)', shadow: 'oklch(10% 0.01 250 / 0.4)',
+    tabBarBg: 'oklch(23% 0.012 250)', tabBarBorder: 'oklch(32% 0.012 250)', dashedBorder: 'oklch(32% 0.012 250)',
+    checkboxBorderDefault: 'oklch(60% 0.01 250)', selectBoxDefault: 'oklch(20% 0.01 250 / 0.6)',
+    libRowActive: { music: 'oklch(26% 0.02 200)', vgm: 'oklch(26% 0.02 30)' },
+  },
+  light: {
+    appBg: 'oklch(98% 0.004 250)', sidebarBg: 'oklch(96% 0.005 250)', sidebarBorder: 'oklch(88% 0.006 250)',
+    cardBg: 'oklch(100% 0 0)', cardBorder: 'oklch(89% 0.006 250)',
+    nestedPanelBg: 'oklch(94% 0.006 250)', nestedPanelBorder: 'oklch(88% 0.006 250)',
+    textPrimary: 'oklch(22% 0.01 250)', textSecondary: 'oklch(38% 0.012 250)', textMuted: 'oklch(50% 0.012 250)',
+    textMuted2: 'oklch(45% 0.012 250)', textFaint: 'oklch(55% 0.01 250)', textFainter: 'oklch(60% 0.01 250)',
+    inputBg: 'oklch(100% 0 0)', inputBorder: 'oklch(83% 0.008 250)',
+    chipBg: 'oklch(92% 0.008 250)', chipText: 'oklch(40% 0.012 250)',
+    overlayBg: 'oklch(25% 0.01 250 / 0.3)', drawerBg: 'oklch(99% 0.003 250)', drawerBorder: 'oklch(87% 0.006 250)',
+    headerBorder: 'oklch(89% 0.006 250)', divider: 'oklch(91% 0.005 250)', shadow: 'oklch(35% 0.01 250 / 0.14)',
+    tabBarBg: 'oklch(93% 0.006 250)', tabBarBorder: 'oklch(85% 0.006 250)', dashedBorder: 'oklch(82% 0.008 250)',
+    checkboxBorderDefault: 'oklch(60% 0.01 250)', selectBoxDefault: 'oklch(100% 0 0 / 0.75)',
+    libRowActive: { music: 'oklch(91% 0.03 200)', vgm: 'oklch(91% 0.035 30)' },
+  },
+};
+
+function mkTracks(n, discSplit) {
+  const tracks = [];
+  for (let i = 1; i <= n; i++) {
+    const disc = discSplit && i > discSplit ? 2 : 1;
+    const num = discSplit && i > discSplit ? i - discSplit : i;
+    tracks.push({ disc, num, title: 'Track ' + String(num).padStart(2, '0') });
+  }
+  return tracks;
+}
+
+const DATA = {
+  music: {
+    name: 'Music', path: '/mnt/media/music',
+    artists: [
+      { id: 'a1', name: 'Boards of Canada', albums: [
+        { id: 'al1', title: 'Music Has the Right to Children', artist: 'Boards of Canada', albumArtist: 'Boards of Canada', year: '1998', genres: ['Electronic', 'IDM'], compilation: false, comments: '', tracks: mkTracks(5) },
+        { id: 'al2', title: 'Geogaddi', artist: 'Boards of Canada', albumArtist: 'Boards of Canada', year: '2002', genres: ['Electronic', 'Ambient'], compilation: false, comments: '', tracks: mkTracks(4) },
+      ]},
+      { id: 'a2', name: 'Nils Frahm', albums: [
+        { id: 'al3', title: 'Spaces', artist: 'Nils Frahm', albumArtist: 'Nils Frahm', year: '2013', genres: ['Neo-Classical', 'Piano'], compilation: false, comments: '', tracks: mkTracks(4) },
+      ]},
+      { id: 'a3', name: 'Fleet Foxes', albums: [
+        { id: 'al4', title: 'Fleet Foxes', artist: 'Fleet Foxes', albumArtist: 'Fleet Foxes', year: '2008', genres: ['Folk', 'Indie Folk'], compilation: false, comments: '', tracks: mkTracks(5) },
+        { id: 'al5', title: 'Helplessness Blues', artist: 'Fleet Foxes', albumArtist: 'Fleet Foxes', year: '2011', genres: ['Folk'], compilation: false, comments: '', tracks: mkTracks(4) },
+      ]},
+      { id: 'a4', name: 'Radiohead', albums: [
+        { id: 'al6', title: 'In Rainbows', artist: 'Radiohead', albumArtist: 'Radiohead', year: '2007', genres: ['Alternative Rock', 'Art Rock'], compilation: false, comments: '', tracks: mkTracks(5) },
+      ]},
+    ],
+  },
+  vgm: {
+    name: 'Video Game Music', path: '/mnt/media/vgm',
+    artists: [
+      { id: 'b1', name: 'Yasunori Mitsuda', albums: [
+        { id: 'bl1', title: 'Chrono Trigger OST', artist: 'Yasunori Mitsuda', albumArtist: 'Yasunori Mitsuda', year: '1995', genres: ['Video Game', 'Orchestral'], compilation: false, comments: '', tracks: mkTracks(6, 4) },
+      ]},
+      { id: 'b2', name: 'Nobuo Uematsu', albums: [
+        { id: 'bl2', title: 'Final Fantasy VII OST', artist: 'Nobuo Uematsu', albumArtist: 'Nobuo Uematsu', year: '1997', genres: ['Video Game'], compilation: false, comments: '', tracks: mkTracks(5) },
+        { id: 'bl3', title: 'Final Fantasy IX OST', artist: 'Nobuo Uematsu', albumArtist: 'Nobuo Uematsu', year: '2000', genres: ['Video Game', 'Orchestral'], compilation: false, comments: '', tracks: mkTracks(4) },
+      ]},
+      { id: 'b3', name: 'Disasterpeace', albums: [
+        { id: 'bl4', title: 'Fez OST', artist: 'Disasterpeace', albumArtist: 'Disasterpeace', year: '2012', genres: ['Chiptune', 'Electronic'], compilation: false, comments: '', tracks: mkTracks(5) },
+      ]},
+      { id: 'b4', name: 'Toby Fox', albums: [
+        { id: 'bl5', title: 'Undertale Soundtrack', artist: 'Toby Fox', albumArtist: 'Toby Fox', year: '2015', genres: ['Chiptune', 'Video Game'], compilation: false, comments: '', tracks: mkTracks(6) },
+      ]},
+    ],
+  },
+};
+
+function clone(o) { return JSON.parse(JSON.stringify(o)); }
+
+class Component extends DCLogic {
+  state = {
+    libs: clone(DATA),
+    theme: 'dark',
+    currentLibraryId: 'music',
+    viewMode: 'artists',
+    selectedArtistId: null,
+    selectMode: false,
+    selectedIds: [],
+    editingAlbumId: null,
+    editForm: null,
+    bulkEditOpen: false,
+    bulkForm: { albumArtist: '', comments: '', genres: [], genreInput: '' },
+    expandedFolders: [],
+    search: '',
+  };
+
+  findAlbum(id) {
+    const lib = this.state.libs[this.state.currentLibraryId];
+    for (const artist of lib.artists) {
+      const album = artist.albums.find(a => a.id === id);
+      if (album) return { artist, album };
+    }
+    return null;
+  }
+
+  toggleTheme() { this.setState(s => ({ theme: s.theme === 'dark' ? 'light' : 'dark' })); }
+  selectLibrary(libId) {
+    this.setState({ currentLibraryId: libId, selectedArtistId: null, selectMode: false, selectedIds: [], search: '' });
+  }
+  setViewMode(m) { this.setState({ viewMode: m, selectedArtistId: null }); }
+  backToArtists() { this.setState({ viewMode: 'artists', selectedArtistId: null }); }
+  openArtist(id) { this.setState({ viewMode: 'artists', selectedArtistId: id }); }
+  toggleSelectMode() { this.setState(s => ({ selectMode: !s.selectMode, selectedIds: [] })); }
+  toggleSelectAlbum(id) {
+    this.setState(s => {
+      const has = s.selectedIds.includes(id);
+      return { selectedIds: has ? s.selectedIds.filter(x => x !== id) : [...s.selectedIds, id] };
+    });
+  }
+  clearSelection() { this.setState({ selectedIds: [] }); }
+  onSearchChange(e) { this.setState({ search: e.target.value }); }
+
+  openEditor(albumId) {
+    const found = this.findAlbum(albumId);
+    if (!found) return;
+    const a = found.album;
+    this.setState({
+      editingAlbumId: albumId,
+      editForm: {
+        title: a.title, artist: a.artist, albumArtist: a.albumArtist, year: a.year,
+        compilation: a.compilation, comments: a.comments, genres: [...a.genres], genreInput: '',
+        tracks: a.tracks.map(t => ({ ...t })),
+      },
+    });
+  }
+  closeEditor() { this.setState({ editingAlbumId: null, editForm: null }); }
+  saveEditor() {
+    const { editingAlbumId, editForm } = this.state;
+    if (!editingAlbumId) return;
+    this.setState(s => {
+      const libs = clone(s.libs);
+      const lib = libs[s.currentLibraryId];
+      for (const artist of lib.artists) {
+        const idx = artist.albums.findIndex(a => a.id === editingAlbumId);
+        if (idx >= 0) {
+          artist.albums[idx] = {
+            ...artist.albums[idx], title: editForm.title, artist: editForm.artist, albumArtist: editForm.albumArtist,
+            year: editForm.year, compilation: editForm.compilation, comments: editForm.comments,
+            genres: editForm.genres, tracks: editForm.tracks.map(t => ({ disc: t.disc, num: t.num, title: t.title })),
+          };
+        }
+      }
+      return { libs, editingAlbumId: null, editForm: null };
+    });
+  }
+  updateEditForm(field, value) { this.setState(s => ({ editForm: { ...s.editForm, [field]: value } })); }
+  addGenreEdit() {
+    const v = (this.state.editForm.genreInput || '').trim();
+    if (!v) return;
+    this.setState(s => ({ editForm: { ...s.editForm, genres: [...s.editForm.genres, v], genreInput: '' } }));
+  }
+  removeGenreEdit(g) {
+    this.setState(s => ({ editForm: { ...s.editForm, genres: s.editForm.genres.filter(x => x !== g) } }));
+  }
+  setTrackTitle(idx, value) {
+    this.setState(s => {
+      const tracks = s.editForm.tracks.map((t, i) => i === idx ? { ...t, title: value } : t);
+      return { editForm: { ...s.editForm, tracks } };
+    });
+  }
+
+  toggleExpandFolder(id) {
+    this.setState(s => {
+      const has = s.expandedFolders.includes(id);
+      return { expandedFolders: has ? s.expandedFolders.filter(x => x !== id) : [...s.expandedFolders, id] };
+    });
+  }
+
+  openBulkEdit() { this.setState({ bulkEditOpen: true }); }
+  closeBulkEdit() { this.setState({ bulkEditOpen: false }); }
+  updateBulkForm(field, value) { this.setState(s => ({ bulkForm: { ...s.bulkForm, [field]: value } })); }
+  addGenreBulk() {
+    const v = (this.state.bulkForm.genreInput || '').trim();
+    if (!v) return;
+    this.setState(s => ({ bulkForm: { ...s.bulkForm, genres: [...s.bulkForm.genres, v], genreInput: '' } }));
+  }
+  removeGenreBulk(g) {
+    this.setState(s => ({ bulkForm: { ...s.bulkForm, genres: s.bulkForm.genres.filter(x => x !== g) } }));
+  }
+  applyBulkEdit() {
+    const { selectedIds, bulkForm } = this.state;
+    this.setState(s => {
+      const libs = clone(s.libs);
+      const lib = libs[s.currentLibraryId];
+      for (const artist of lib.artists) {
+        artist.albums.forEach((album) => {
+          if (!selectedIds.includes(album.id)) return;
+          if (bulkForm.albumArtist.trim()) album.albumArtist = bulkForm.albumArtist.trim();
+          if (bulkForm.comments.trim()) album.comments = bulkForm.comments.trim();
+          if (bulkForm.genres.length) album.genres = [...new Set([...album.genres, ...bulkForm.genres])];
+        });
+      }
+      return { libs, bulkEditOpen: false, selectMode: false, selectedIds: [], bulkForm: { albumArtist: '', comments: '', genres: [], genreInput: '' } };
+    });
+  }
+
+  renderVals() {
+    const s = this.state;
+    const pal = PALETTES[s.theme];
+    const lib = s.libs[s.currentLibraryId];
+    const search = s.search.trim().toLowerCase();
+    const activeAccent = LIB_ACCENT[s.currentLibraryId];
+
+    const libraries = Object.keys(s.libs).map(id => {
+      const l = s.libs[id];
+      const active = id === s.currentLibraryId;
+      const albumCount = l.artists.reduce((n, a) => n + a.albums.length, 0);
+      return {
+        key: id, name: l.name, albumCount: albumCount + ' albums',
+        select: () => this.selectLibrary(id),
+        bg: active ? pal.libRowActive[id] : 'transparent',
+        dot: LIB_ACCENT[id], weight: active ? 700 : 500,
+        textColor: active ? pal.textPrimary : pal.textSecondary,
+      };
+    });
+
+    const selectedArtist = s.selectedArtistId ? lib.artists.find(a => a.id === s.selectedArtistId) : null;
+
+    const artistCards = lib.artists
+      .filter(a => !search || a.name.toLowerCase().includes(search))
+      .map(a => ({
+        id: a.id, name: a.name, coverId: 'artistcover-' + a.id,
+        albumCountLabel: a.albums.length + (a.albums.length === 1 ? ' album' : ' albums'),
+        open: () => this.openArtist(a.id),
+      }));
+
+    let flatAlbums = [];
+    lib.artists.forEach(a => a.albums.forEach(al => flatAlbums.push({ artistObj: a, album: al })));
+    if (s.selectedArtistId) flatAlbums = flatAlbums.filter(x => x.artistObj.id === s.selectedArtistId);
+    if (search) flatAlbums = flatAlbums.filter(x => x.album.title.toLowerCase().includes(search) || x.artistObj.name.toLowerCase().includes(search));
+
+    const albumCards = flatAlbums.map(({ album: al }) => {
+      const selected = s.selectedIds.includes(al.id);
+      return {
+        id: al.id, title: al.title, artist: al.artist, year: al.year,
+        coverId: 'cover-' + al.id,
+        genreChips: al.genres.slice(0, 2),
+        selected,
+        border: selected ? activeAccent : pal.cardBorder,
+        checkBg: selected ? activeAccent : pal.selectBoxDefault,
+        checkBorder: selected ? activeAccent : pal.checkboxBorderDefault,
+        toggleSelect: () => this.toggleSelectAlbum(al.id),
+        click: () => s.selectMode ? this.toggleSelectAlbum(al.id) : this.openEditor(al.id),
+      };
+    });
+
+    const folderArtists = lib.artists
+      .filter(a => !search || a.name.toLowerCase().includes(search))
+      .map(a => ({
+        id: a.id, name: a.name,
+        albumCountLabel: a.albums.length + (a.albums.length === 1 ? ' album' : ' albums'),
+        expanded: s.expandedFolders.includes(a.id),
+        chevronRotate: s.expandedFolders.includes(a.id) ? 'rotate(90deg)' : 'rotate(0deg)',
+        toggle: () => this.toggleExpandFolder(a.id),
+        albums: a.albums.map(al => ({
+          id: al.id, title: al.title,
+          trackCountLabel: al.tracks.length + ' tracks',
+          click: () => this.openEditor(al.id),
+        })),
+      }));
+
+    const editForm = s.editForm ? {
+      coverId: 'cover-' + s.editingAlbumId,
+      title: s.editForm.title, artist: s.editForm.artist, albumArtist: s.editForm.albumArtist, year: s.editForm.year,
+      compilation: s.editForm.compilation, compBg: s.editForm.compilation ? activeAccent : 'transparent',
+      comments: s.editForm.comments, genreInput: s.editForm.genreInput,
+      genreChips: s.editForm.genres.map(g => ({ label: g, remove: () => this.removeGenreEdit(g) })),
+      tracks: s.editForm.tracks.map((t, i) => ({
+        posLabel: (t.disc > 1 ? t.disc + '.' : '') + String(t.num).padStart(2, '0'),
+        title: t.title, setTitle: (e) => this.setTrackTitle(i, e.target.value),
+      })),
+      setTitle: (e) => this.updateEditForm('title', e.target.value),
+      setArtist: (e) => this.updateEditForm('artist', e.target.value),
+      setAlbumArtist: (e) => this.updateEditForm('albumArtist', e.target.value),
+      setYear: (e) => this.updateEditForm('year', e.target.value),
+      setComments: (e) => this.updateEditForm('comments', e.target.value),
+      setGenreInput: (e) => this.updateEditForm('genreInput', e.target.value),
+      genreKeyDown: (e) => { if (e.key === 'Enter') { e.preventDefault(); this.addGenreEdit(); } },
+      toggleCompilation: () => this.updateEditForm('compilation', !s.editForm.compilation),
+    } : null;
+
+    const bulkForm = {
+      albumArtist: s.bulkForm.albumArtist, comments: s.bulkForm.comments, genreInput: s.bulkForm.genreInput,
+      genreChips: s.bulkForm.genres.map(g => ({ label: g, remove: () => this.removeGenreBulk(g) })),
+      setAlbumArtist: (e) => this.updateBulkForm('albumArtist', e.target.value),
+      setComments: (e) => this.updateBulkForm('comments', e.target.value),
+      setGenreInput: (e) => this.updateBulkForm('genreInput', e.target.value),
+      genreKeyDown: (e) => { if (e.key === 'Enter') { e.preventDefault(); this.addGenreBulk(); } },
+    };
+
+    const tabOf = (m) => s.viewMode === m;
+    const activeTextOn = 'oklch(15% 0.01 250)';
+    const tabBg = { artists: tabOf('artists') ? activeAccent : 'transparent', albums: tabOf('albums') ? activeAccent : 'transparent', folders: tabOf('folders') ? activeAccent : 'transparent' };
+    const tabColor = { artists: tabOf('artists') ? activeTextOn : pal.textSecondary, albums: tabOf('albums') ? activeTextOn : pal.textSecondary, folders: tabOf('folders') ? activeTextOn : pal.textSecondary };
+
+    return {
+      pal, activeAccent,
+      toggleTheme: () => this.toggleTheme(),
+      themeIcon: s.theme === 'dark' ? '☀' : '☾',
+      libraries,
+      currentLibrary: { name: lib.name, path: lib.path },
+      selectedArtistName: selectedArtist ? selectedArtist.name : '',
+      search: s.search, onSearchChange: (e) => this.onSearchChange(e),
+      setViewArtists: () => this.setViewMode('artists'),
+      setViewAlbums: () => this.setViewMode('albums'),
+      setViewFolders: () => this.setViewMode('folders'),
+      tabBg, tabColor,
+      selectMode: s.selectMode,
+      selectModeLabel: s.selectMode ? 'Done' : 'Select',
+      selectModeBg: s.selectMode ? activeAccent : 'transparent',
+      selectModeColor: s.selectMode ? activeTextOn : pal.textSecondary,
+      selectModeBorder: s.selectMode ? activeAccent : pal.inputBorder,
+      toggleSelectMode: () => this.toggleSelectMode(),
+      backToArtists: () => this.backToArtists(),
+      showArtistGrid: s.viewMode === 'artists' && !s.selectedArtistId,
+      showAlbumGrid: s.viewMode === 'albums' || (s.viewMode === 'artists' && !!s.selectedArtistId),
+      showFolders: s.viewMode === 'folders',
+      artistCards, albumCards, folderArtists,
+      editorOpen: !!s.editForm, editForm, closeEditor: () => this.closeEditor(), saveEditor: () => this.saveEditor(),
+      selectedCount: s.selectedIds.length,
+      selectedCountLabel: String(s.selectedIds.length),
+      clearSelection: () => this.clearSelection(),
+      openBulkEdit: () => this.openBulkEdit(),
+      bulkEditOpen: s.bulkEditOpen, bulkForm,
+      closeBulkEdit: () => this.closeBulkEdit(),
+      applyBulkEdit: () => this.applyBulkEdit(),
+    };
+  }
+}
+
+</script>
+</body>
+</html>
