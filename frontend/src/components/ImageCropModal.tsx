@@ -134,7 +134,14 @@ export function ImageCropModal({ file, pal, accent, onCancel, onCropped }: Props
   const displayH = naturalSize ? naturalSize.h * baseScale(naturalSize.w, naturalSize.h) * zoom : undefined
 
   const modal = (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    // React portals still bubble synthetic events up the React tree (not the DOM
+    // tree), so without stopping propagation here, any click inside this portal
+    // (pan, buttons, slider) would bubble to CoverImage's own onClick and
+    // reopen the file picker.
+    <div
+      onClick={(e) => e.stopPropagation()}
+      style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+    >
       <div onClick={onCancel} style={{ position: 'absolute', inset: 0, background: pal.overlayBg }} />
       <div
         style={{
