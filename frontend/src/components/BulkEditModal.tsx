@@ -76,7 +76,7 @@ export function BulkEditModal({ ids, pal, accent, artistSuggestions, onClose, on
 
         <div style={{ display: 'flex', gap: 14, marginBottom: 16 }}>
           <div style={{ width: 84, height: 84, flex: 'none' }}>
-            <CoverImage overrideUrl={coverPreviewUrl} placeholder="Apply cover to all" pal={pal} radius={8} editable onUpload={handleCoverPick} />
+            <CoverImage overrideUrl={coverPreviewUrl} placeholder="Apply cover to all" pal={pal} accent={accent} radius={8} editable onUpload={handleCoverPick} />
           </div>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div>

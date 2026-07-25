@@ -1,12 +1,14 @@
 import { useRef, useState } from 'react'
 import { api } from '../api'
 import type { Palette } from '../theme'
+import { ImageCropModal } from './ImageCropModal'
 
 interface Props {
   coverId?: string | null
   overrideUrl?: string | null
   placeholder: string
   pal: Palette
+  accent?: string
   radius?: number
   editable?: boolean
   onUpload?: (file: File) => void | Promise<void>
@@ -22,18 +24,25 @@ function initialsOf(text: string): string {
     .toUpperCase()
 }
 
-export function CoverImage({ coverId, overrideUrl, placeholder, pal, radius = 0, editable, onUpload }: Props) {
+export function CoverImage({ coverId, overrideUrl, placeholder, pal, accent, radius = 0, editable, onUpload }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
+  const [pendingFile, setPendingFile] = useState<File | null>(null)
   const url = overrideUrl ?? api.coverUrl(coverId)
 
-  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file || !onUpload) return
+    setPendingFile(file)
+  }
+
+  async function handleCropped(croppedFile: File) {
+    setPendingFile(null)
+    if (!onUpload) return
     setUploading(true)
     try {
-      await onUpload(file)
+      await onUpload(croppedFile)
     } finally {
       setUploading(false)
     }
@@ -75,6 +84,15 @@ export function CoverImage({ coverId, overrideUrl, placeholder, pal, radius = 0,
           accept="image/png,image/jpeg,image/gif,image/webp"
           style={{ display: 'none' }}
           onChange={handleFile}
+        />
+      )}
+      {pendingFile && (
+        <ImageCropModal
+          file={pendingFile}
+          pal={pal}
+          accent={accent ?? pal.textPrimary}
+          onCancel={() => setPendingFile(null)}
+          onCropped={handleCropped}
         />
       )}
     </div>

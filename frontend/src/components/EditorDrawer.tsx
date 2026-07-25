@@ -125,7 +125,7 @@ export function EditorDrawer({ albumId, pal, accent, artistSuggestions, onClose,
             <>
               <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
                 <div style={{ width: 120, height: 120, flex: 'none' }}>
-                  <CoverImage coverId={coverId} placeholder={draft.title} pal={pal} radius={8} editable onUpload={handleCoverUpload} />
+                  <CoverImage coverId={coverId} placeholder={draft.title} pal={pal} accent={accent} radius={8} editable onUpload={handleCoverUpload} />
                 </div>
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10, minWidth: 0 }}>
                   <div>
