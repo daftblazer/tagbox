@@ -89,7 +89,12 @@ def organize_loose_files(lib: LibraryConfig, relpaths: list[str]) -> tuple[list[
         title = tags.title or os.path.splitext(os.path.basename(abspath))[0]
         target_dir = _unique_dir(os.path.join(artist_dir, sanitize_folder_name(title)))
         os.makedirs(target_dir, exist_ok=True)
-        shutil.move(abspath, os.path.join(target_dir, os.path.basename(abspath)))
+        target_path = os.path.join(target_dir, os.path.basename(abspath))
+        shutil.move(abspath, target_path)
+        # A loose file becomes a single-track "album" named after itself, so
+        # give it a matching album tag rather than leaving the old one (often
+        # blank, or the artist's actual album name it doesn't belong to).
+        tagio.write_album_fields(target_path, album=title)
         organized.append(relpath)
 
     return organized, skipped

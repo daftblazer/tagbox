@@ -1,6 +1,6 @@
 import os
 
-from app import repo
+from app import repo, tagio
 from app.config import LibraryConfig
 from app.organize import find_loose_files, organize_loose_files, sanitize_folder_name
 from app.scanner import scan_library
@@ -41,6 +41,21 @@ def test_organize_moves_file_into_titled_folder(library_root_with_loose_file):
 
     # And it's no longer flagged as loose.
     assert find_loose_files(lib) == []
+
+
+def test_organize_sets_album_tag_to_match_title(library_root_with_loose_file):
+    lib = _lib(library_root_with_loose_file)
+    loose = find_loose_files(lib)
+    assert tagio.read_tags(
+        str(library_root_with_loose_file / "Boards of Canada" / "B-Side Single.mp3")
+    ).album == ""
+
+    organize_loose_files(lib, [f.relpath for f in loose])
+
+    new_path = library_root_with_loose_file / "Boards of Canada" / "B-Side Single" / "B-Side Single.mp3"
+    tags = tagio.read_tags(str(new_path))
+    assert tags.album == "B-Side Single"
+    assert tags.album == tags.title
 
 
 def test_organized_file_is_picked_up_as_an_album_on_rescan(db_conn, library_root_with_loose_file):
