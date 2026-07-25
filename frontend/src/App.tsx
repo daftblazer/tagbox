@@ -196,7 +196,6 @@ export default function App() {
         onSelectLibrary={selectLibrary}
         onRescan={rescan}
         rescanning={rescanning}
-        onOrganizeLooseFiles={() => setOrganizeOpen(true)}
       />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
@@ -225,6 +224,7 @@ export default function App() {
               onSetViewMode={setViewMode}
               selectMode={selectMode}
               onToggleSelectMode={toggleSelectMode}
+              onOrganizeLooseFiles={() => setOrganizeOpen(true)}
             />
 
             <div style={{ flex: 1, overflowY: 'auto', padding: 22 }}>

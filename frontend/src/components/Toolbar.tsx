@@ -14,6 +14,7 @@ interface Props {
   onSetViewMode: (m: ViewMode) => void
   selectMode: boolean
   onToggleSelectMode: () => void
+  onOrganizeLooseFiles: () => void
 }
 
 const TABS: { key: ViewMode; label: string }[] = [
@@ -24,7 +25,7 @@ const TABS: { key: ViewMode; label: string }[] = [
 
 export function Toolbar({
   pal, accent, libraryName, selectedArtistName, onBackToArtists, search, onSearchChange,
-  viewMode, onSetViewMode, selectMode, onToggleSelectMode,
+  viewMode, onSetViewMode, selectMode, onToggleSelectMode, onOrganizeLooseFiles,
 }: Props) {
   return (
     <div style={{ flex: 'none', display: 'flex', alignItems: 'center', gap: 14, padding: '14px 22px', borderBottom: `1px solid ${pal.headerBorder}` }}>
@@ -67,6 +68,16 @@ export function Toolbar({
             </div>
           )
         })}
+      </div>
+
+      <div
+        onClick={onOrganizeLooseFiles}
+        style={{
+          fontSize: 12.5, padding: '7px 13px', borderRadius: 7, cursor: 'pointer',
+          border: `1px solid ${pal.inputBorder}`, color: pal.textSecondary,
+        }}
+      >
+        Organize loose files
       </div>
 
       <div
