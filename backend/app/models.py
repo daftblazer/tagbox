@@ -9,6 +9,22 @@ class LibraryOut(BaseModel):
     album_count: int
 
 
+class LibraryCreateIn(BaseModel):
+    name: str
+    path: str
+
+
+class BrowseEntryOut(BaseModel):
+    name: str
+    path: str
+
+
+class BrowseResultOut(BaseModel):
+    current_path: str
+    parent_path: str | None
+    entries: list[BrowseEntryOut]
+
+
 class ArtistOut(BaseModel):
     id: str
     name: str

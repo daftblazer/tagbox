@@ -3,6 +3,7 @@ import type {
   AlbumDetail,
   AlbumUpdateInput,
   Artist,
+  BrowseResult,
   BulkUpdateInput,
   FolderArtist,
   Library,
@@ -36,6 +37,9 @@ const jsonInit = (method: string, body: unknown): RequestInit => ({
 
 export const api = {
   libraries: () => req<Library[]>('/libraries'),
+  browseMediaRoot: (path = '') => req<BrowseResult>(`/libraries/browse${qs({ path })}`),
+  createLibrary: (name: string, path: string) => req<Library>('/libraries', jsonInit('POST', { name, path })),
+  deleteLibrary: (libraryId: string) => req<void>(`/libraries/${libraryId}`, { method: 'DELETE' }),
   rescan: (libraryId: string) => req<{ status: string }>(`/libraries/${libraryId}/rescan`, { method: 'POST' }),
   artists: (libraryId: string, search?: string) =>
     req<Artist[]>(`/libraries/${libraryId}/artists${qs({ search })}`),

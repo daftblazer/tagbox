@@ -1,8 +1,8 @@
-# Runtime data (SQLite index + cover cache) and per-install config
+# Runtime data (SQLite index, cover cache, and now the library list itself)
 /data/
-/config/libraries.yaml
 
-# Local test fixtures generated during development
+# Local test fixtures generated during development — also the default
+# TAGBOX_MEDIA_ROOT fallback for local dev.
 /dev-library/
 
 # Backend

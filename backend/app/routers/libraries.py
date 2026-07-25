@@ -1,10 +1,14 @@
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 
-from .. import config, organize, repo, scanner
+from .. import browse as browse_module
+from .. import organize, repo, scanner
+from ..config import LibraryConfig
 from ..models import (
     AlbumOut,
     ArtistOut,
+    BrowseResultOut,
     FolderArtist,
+    LibraryCreateIn,
     LibraryOut,
     LooseFileOut,
     OrganizeLooseFilesIn,
@@ -14,16 +18,47 @@ from ..models import (
 router = APIRouter(prefix="/api/libraries", tags=["libraries"])
 
 
-def _lib_config_or_404(library_id: str) -> config.LibraryConfig:
-    for lib in config.load_libraries():
-        if lib.id == library_id:
-            return lib
-    raise HTTPException(status_code=404, detail=f"Unknown library '{library_id}'")
+def _lib_config_or_404(library_id: str) -> LibraryConfig:
+    lib = repo.get_library_config(library_id)
+    if not lib:
+        raise HTTPException(status_code=404, detail=f"Unknown library '{library_id}'")
+    return lib
 
 
 @router.get("", response_model=list[LibraryOut])
 def get_libraries() -> list[LibraryOut]:
     return repo.list_libraries()
+
+
+@router.post("", response_model=LibraryOut, status_code=201)
+def create_library(body: LibraryCreateIn, background_tasks: BackgroundTasks) -> LibraryOut:
+    try:
+        lib = repo.create_library(body.name, body.path)
+    except (ValueError, NotADirectoryError, browse_module.PathEscapesMediaRoot) as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    background_tasks.add_task(scanner.scan_library, lib)
+    return next(l for l in repo.list_libraries() if l.id == lib.id)
+
+
+@router.delete("/{library_id}", status_code=204)
+def delete_library(library_id: str) -> None:
+    if not repo.delete_library(library_id):
+        raise HTTPException(status_code=404, detail=f"Unknown library '{library_id}'")
+
+
+@router.get("/browse", response_model=BrowseResultOut)
+def browse_media_root(path: str = "") -> BrowseResultOut:
+    try:
+        result = browse_module.browse(path)
+    except browse_module.PathEscapesMediaRoot:
+        raise HTTPException(status_code=400, detail="Path escapes the media root.")
+    except NotADirectoryError:
+        raise HTTPException(status_code=404, detail=f"'{path}' is not a folder.")
+    return BrowseResultOut(
+        current_path=result.current_path,
+        parent_path=result.parent_path,
+        entries=[{"name": e.name, "path": e.path} for e in result.entries],
+    )
 
 
 @router.post("/{library_id}/rescan", status_code=202)

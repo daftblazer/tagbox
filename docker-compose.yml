@@ -7,9 +7,8 @@ services:
     ports:
       - "8420:8000"
     volumes:
-      - ./config:/config:ro,Z
       - ./data:/data:Z
-      # Mount each library's root folder at the path referenced by its `path:`
-      # entry in config/libraries.yaml. Add one line per library.
-      - /path/to/your/music:/libraries/music:rw,Z
-      - /path/to/your/vgm:/libraries/vgm:rw,Z
+      # One folder containing all your libraries as subfolders (e.g.
+      # /path/to/your/media/Music, /path/to/your/media/Video Game Music).
+      # Add each one as a library from within the app — see the README.
+      - /path/to/your/media:/media:rw,Z

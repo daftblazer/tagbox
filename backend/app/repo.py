@@ -1,7 +1,9 @@
 import os
+import re
 import sqlite3
 
-from . import covers, db, tagio
+from . import browse, covers, db, tagio
+from .config import LibraryConfig
 from .models import (
     AlbumDetailOut,
     AlbumOut,
@@ -30,6 +32,60 @@ def list_libraries() -> list[LibraryOut]:
         LibraryOut(id=r["id"], name=r["name"], path=r["path"], artist_count=r["artist_count"], album_count=r["album_count"])
         for r in rows
     ]
+
+
+def list_library_configs() -> list[LibraryConfig]:
+    """The libraries table *is* the config now — this is what the startup
+    scan and the rescan endpoint iterate over, sourced from the DB instead
+    of a static file."""
+    conn = db.get_conn()
+    rows = conn.execute("SELECT id, name, path FROM libraries ORDER BY name COLLATE NOCASE").fetchall()
+    return [LibraryConfig(id=r["id"], name=r["name"], path=r["path"]) for r in rows]
+
+
+def get_library_config(library_id: str) -> LibraryConfig | None:
+    conn = db.get_conn()
+    row = conn.execute("SELECT id, name, path FROM libraries WHERE id=?", (library_id,)).fetchone()
+    return LibraryConfig(id=row["id"], name=row["name"], path=row["path"]) if row else None
+
+
+def _slugify(name: str) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "-", name.strip().lower()).strip("-")
+    return slug or "library"
+
+
+def create_library(name: str, relative_path: str) -> LibraryConfig:
+    name = name.strip()
+    if not name:
+        raise ValueError("Library name is required.")
+
+    abs_path = browse.resolve_under_media_root(relative_path)
+    if not os.path.isdir(abs_path):
+        raise NotADirectoryError(f"'{relative_path}' is not a folder under the media root.")
+
+    conn = db.get_conn()
+    existing = conn.execute("SELECT id, path FROM libraries").fetchall()
+    if any(r["path"] == abs_path for r in existing):
+        raise ValueError("A library already points at this folder.")
+
+    base_slug = _slugify(name)
+    existing_ids = {r["id"] for r in existing}
+    slug = base_slug
+    n = 2
+    while slug in existing_ids:
+        slug = f"{base_slug}-{n}"
+        n += 1
+
+    conn.execute("INSERT INTO libraries (id, name, path) VALUES (?, ?, ?)", (slug, name, abs_path))
+    conn.commit()
+    return LibraryConfig(id=slug, name=name, path=abs_path)
+
+
+def delete_library(library_id: str) -> bool:
+    conn = db.get_conn()
+    cur = conn.execute("DELETE FROM libraries WHERE id=?", (library_id,))
+    conn.commit()
+    return cur.rowcount > 0
 
 
 def list_artist_names(library_id: str) -> list[str]:

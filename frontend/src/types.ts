@@ -83,3 +83,14 @@ export interface OrganizeLooseFilesResult {
   organized: string[]
   skipped: string[]
 }
+
+export interface BrowseEntry {
+  name: string
+  path: string
+}
+
+export interface BrowseResult {
+  current_path: string
+  parent_path: string | null
+  entries: BrowseEntry[]
+}

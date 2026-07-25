@@ -1,8 +1,6 @@
 import os
 from dataclasses import dataclass
 
-import yaml
-
 
 @dataclass
 class LibraryConfig:
@@ -11,13 +9,13 @@ class LibraryConfig:
     path: str
 
 
-def _default_config_path() -> str:
-    env = os.environ.get("TAGBOX_CONFIG")
+def _default_media_root() -> str:
+    env = os.environ.get("TAGBOX_MEDIA_ROOT")
     if env:
         return env
-    # Fall back to a repo-relative path for local dev.
+    # Fall back to the repo-relative dev fixture library for local dev.
     here = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(here, "..", "..", "config", "libraries.yaml")
+    return os.path.join(here, "..", "..", "dev-library")
 
 
 def _default_data_dir() -> str:
@@ -28,35 +26,10 @@ def _default_data_dir() -> str:
     return os.path.join(here, "..", "..", "data")
 
 
-CONFIG_PATH = os.path.abspath(_default_config_path())
+MEDIA_ROOT = os.path.abspath(_default_media_root())
 DATA_DIR = os.path.abspath(_default_data_dir())
 DB_PATH = os.path.join(DATA_DIR, "tagbox.db")
 COVERS_DIR = os.path.join(DATA_DIR, "covers")
-
-
-def load_libraries() -> list[LibraryConfig]:
-    if not os.path.exists(CONFIG_PATH):
-        raise FileNotFoundError(
-            f"No library config found at {CONFIG_PATH}. "
-            "Copy config/libraries.example.yaml to config/libraries.yaml and edit it."
-        )
-    with open(CONFIG_PATH, "r") as f:
-        raw = yaml.safe_load(f) or {}
-
-    libs = []
-    for entry in raw.get("libraries", []):
-        lib_id = str(entry["id"])
-        path = str(entry["path"])
-        if not os.path.isdir(path):
-            raise NotADirectoryError(
-                f"Library '{lib_id}' points at '{path}', which does not exist or isn't mounted."
-            )
-        libs.append(LibraryConfig(id=lib_id, name=str(entry.get("name", lib_id)), path=path))
-
-    if not libs:
-        raise ValueError(f"No libraries defined in {CONFIG_PATH}")
-
-    return libs
 
 
 def ensure_data_dirs() -> None:

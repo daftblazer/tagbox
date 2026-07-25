@@ -11,10 +11,13 @@ interface Props {
   onSelectLibrary: (id: string) => void
   onRescan: () => void
   rescanning: boolean
+  onAddLibrary: () => void
+  onDeleteLibrary: (id: string) => void
 }
 
 export function Sidebar({
   pal, theme, onToggleTheme, libraries, libraryId, currentLibrary, onSelectLibrary, onRescan, rescanning,
+  onAddLibrary, onDeleteLibrary,
 }: Props) {
   return (
     <div
@@ -56,6 +59,7 @@ export function Sidebar({
         return (
           <div
             key={lib.id}
+            className="library-row"
             onClick={() => onSelectLibrary(lib.id)}
             style={{
               display: 'flex', alignItems: 'center', gap: 9, padding: '9px 10px', borderRadius: 7,
@@ -72,6 +76,17 @@ export function Sidebar({
               >
                 {lib.name}
               </div>
+            </div>
+            <div
+              className="library-delete-btn"
+              onClick={(e) => {
+                e.stopPropagation()
+                onDeleteLibrary(lib.id)
+              }}
+              title="Remove library"
+              style={{ fontSize: 13, color: pal.textFaint, cursor: 'pointer', padding: '0 2px', lineHeight: 1 }}
+            >
+              ×
             </div>
             <div style={{ fontSize: 11, color: pal.textFaint }}>{lib.album_count} albums</div>
           </div>
@@ -104,11 +119,11 @@ export function Sidebar({
 
       <div style={{ flex: 1 }} />
       <div
+        onClick={onAddLibrary}
         style={{
           fontSize: 12, color: pal.textFainter, padding: '9px 10px', border: `1px dashed ${pal.dashedBorder}`,
-          borderRadius: 7, textAlign: 'center', cursor: 'default',
+          borderRadius: 7, textAlign: 'center', cursor: 'pointer',
         }}
-        title="Add libraries by editing config/libraries.yaml and restarting the server"
       >
         + Add library
       </div>

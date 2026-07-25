@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { api } from './api'
+import { AddLibraryModal } from './components/AddLibraryModal'
 import { AlbumGrid } from './components/AlbumGrid'
 import { AlbumTree } from './components/AlbumTree'
 import { ArtistGrid } from './components/ArtistGrid'
@@ -52,6 +53,7 @@ export default function App() {
   const [artistSuggestions, setArtistSuggestions] = useState<string[]>([])
   const [organizeOpen, setOrganizeOpen] = useState(false)
   const [artistAlbumView, setArtistAlbumView] = useState<'tree' | 'grid'>('tree')
+  const [addLibraryOpen, setAddLibraryOpen] = useState(false)
 
   const currentLibrary = libraries.find((l) => l.id === libraryId) ?? null
   const accent = libraryId ? accentForLibrary(libraryId) : accentForLibrary('default')
@@ -165,6 +167,17 @@ export default function App() {
     })
   }
 
+  async function handleDeleteLibrary(id: string) {
+    if (!window.confirm('Remove this library from Tagbox? Your files on disk will not be touched.')) return
+    try {
+      await api.deleteLibrary(id)
+      if (libraryId === id) setLibraryId(null)
+      reloadLibraries()
+    } catch (e) {
+      setLibrariesError(String(e))
+    }
+  }
+
   async function rescan() {
     if (!libraryId) return
     setRescanning(true)
@@ -200,6 +213,8 @@ export default function App() {
         onSelectLibrary={selectLibrary}
         onRescan={rescan}
         rescanning={rescanning}
+        onAddLibrary={() => setAddLibraryOpen(true)}
+        onDeleteLibrary={handleDeleteLibrary}
       />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
@@ -209,8 +224,8 @@ export default function App() {
 
         {!currentLibrary && !librariesError && (
           <div style={{ padding: 22, fontSize: 13, color: pal.textFaint }}>
-            No libraries configured. Copy <code>config/libraries.example.yaml</code> to <code>config/libraries.yaml</code>,
-            point each entry at a folder, and restart the server.
+            No libraries yet. Click <strong>+ Add library</strong> in the sidebar to register a folder from your
+            mounted media root.
           </div>
         )}
 
@@ -338,6 +353,21 @@ export default function App() {
               reloadLibraries()
               bumpListVersion()
             }, 1500)
+          }}
+        />
+      )}
+
+      {addLibraryOpen && (
+        <AddLibraryModal
+          pal={pal}
+          accent={accent}
+          onClose={() => setAddLibraryOpen(false)}
+          onCreated={(lib) => {
+            setAddLibraryOpen(false)
+            reloadLibraries()
+            selectLibrary(lib.id)
+            // The server scans in the background right after creation; give it a moment.
+            setTimeout(bumpListVersion, 1500)
           }}
         />
       )}

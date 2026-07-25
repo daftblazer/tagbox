@@ -36,3 +36,12 @@ textarea {
 .cover-hover-overlay.visible {
   opacity: 1;
 }
+
+.library-delete-btn {
+  opacity: 0;
+  transition: opacity 120ms;
+}
+
+.library-row:hover .library-delete-btn {
+  opacity: 1;
+}

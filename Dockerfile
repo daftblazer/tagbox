@@ -16,7 +16,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/app ./app
 COPY --from=frontend-build /frontend/dist ./frontend_dist
 
-ENV TAGBOX_CONFIG=/config/libraries.yaml \
+ENV TAGBOX_MEDIA_ROOT=/media \
     TAGBOX_DATA_DIR=/data \
     TAGBOX_FRONTEND_DIST=/app/frontend_dist \
     PYTHONUNBUFFERED=1

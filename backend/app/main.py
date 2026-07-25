@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from . import config, db, scanner
+from . import config, db, repo, scanner
 from .routers import albums, covers, libraries
 
 logging.basicConfig(level=logging.INFO)
@@ -29,12 +29,13 @@ app.include_router(covers.router)
 def startup() -> None:
     config.ensure_data_dirs()
     db.init_db()
-    try:
-        libs = config.load_libraries()
-    except Exception as exc:
-        logger.warning("Skipping initial scan: %s", exc)
+    if not os.path.isdir(config.MEDIA_ROOT):
+        logger.warning(
+            "Media root '%s' does not exist — mount it (TAGBOX_MEDIA_ROOT) so libraries can be added from the UI.",
+            config.MEDIA_ROOT,
+        )
         return
-    for lib in libs:
+    for lib in repo.list_library_configs():
         logger.info("Scanning library '%s' (%s)...", lib.name, lib.path)
         try:
             scanner.scan_library(lib)

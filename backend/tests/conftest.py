@@ -70,3 +70,28 @@ def db_conn(library_root):
 
     db_module.init_db()
     return db_module.get_conn()
+
+
+@pytest.fixture()
+def media_root(tmp_path, monkeypatch):
+    """A media root directory containing two library-shaped subfolders, e.g.
+    the /mnt/user/music mount holding Music/ and Video Game Music/. Kept as a
+    sibling of the data dir (not nested inside it), matching how they're two
+    separate mounts in the real deployment — data_dir living *inside*
+    media_root would make it spuriously show up as a browsable "library"."""
+    data_dir = tmp_path / "data"
+    media_dir = tmp_path / "media"
+    monkeypatch.setattr("app.config.DATA_DIR", str(data_dir))
+    monkeypatch.setattr("app.config.DB_PATH", str(data_dir / "tagbox.db"))
+    monkeypatch.setattr("app.config.COVERS_DIR", str(data_dir / "covers"))
+    monkeypatch.setattr("app.config.MEDIA_ROOT", str(media_dir))
+
+    (media_dir / "Music").mkdir(parents=True)
+    (media_dir / "Video Game Music").mkdir()
+
+    from app import db as db_module
+
+    db_module._local.__dict__.clear()
+    db_module.init_db()
+
+    return media_dir
