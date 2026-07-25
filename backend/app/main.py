@@ -1,5 +1,6 @@
 import logging
 import os
+import threading
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -29,6 +30,14 @@ app.include_router(covers.router)
 def startup() -> None:
     config.ensure_data_dirs()
     db.init_db()
+    # Scanning runs in a background thread rather than inline here: this
+    # function blocks uvicorn from accepting connections until it returns, so
+    # scanning synchronously on startup means the whole UI is unreachable
+    # (looks like the app is broken/hung) until every library finishes.
+    threading.Thread(target=_scan_all_libraries, daemon=True).start()
+
+
+def _scan_all_libraries() -> None:
     if not os.path.isdir(config.MEDIA_ROOT):
         logger.warning(
             "Media root '%s' does not exist — mount it (TAGBOX_MEDIA_ROOT) so libraries can be added from the UI.",
