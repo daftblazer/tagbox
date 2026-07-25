@@ -58,6 +58,8 @@ class FolderArtist(BaseModel):
 class TrackUpdateIn(BaseModel):
     id: str
     title: str
+    disc_num: int
+    track_num: int
 
 
 class AlbumUpdateIn(BaseModel):

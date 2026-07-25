@@ -100,6 +100,17 @@ def write_track_title(path: str, title: str) -> None:
     easy.save()
 
 
+def write_track_position(path: str, *, disc_num: int | None = None, track_num: int | None = None) -> None:
+    easy = mutagen.File(path, easy=True)
+    if easy is None:
+        return
+    if disc_num is not None:
+        easy["discnumber"] = [str(disc_num)]
+    if track_num is not None:
+        easy["tracknumber"] = [str(track_num)]
+    easy.save()
+
+
 def write_album_fields(
     path: str,
     *,

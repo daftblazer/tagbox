@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api'
-import { fieldLabelStyle, inputStyle } from '../styles'
+import { fieldLabelStyle, inputStyle, smallNumberInputStyle } from '../styles'
 import { ACTIVE_TEXT_ON_ACCENT, type Palette } from '../theme'
 import type { AlbumDetail } from '../types'
 import { ArtistCombobox } from './ArtistCombobox'
@@ -47,10 +47,6 @@ function draftFrom(album: AlbumDetail): Draft {
   }
 }
 
-function posLabel(t: TrackDraft): string {
-  return (t.disc_num > 1 ? t.disc_num + '.' : '') + String(t.track_num).padStart(2, '0')
-}
-
 export function EditorDrawer({ albumId, pal, accent, artistSuggestions, onClose, onSaved }: Props) {
   const [draft, setDraft] = useState<Draft | null>(null)
   const [coverId, setCoverId] = useState<string | null>(null)
@@ -94,7 +90,7 @@ export function EditorDrawer({ albumId, pal, accent, artistSuggestions, onClose,
         compilation: draft.compilation,
         comments: draft.comments,
         genres: draft.genres,
-        tracks: draft.tracks.map((t) => ({ id: t.id, title: t.title })),
+        tracks: draft.tracks.map((t) => ({ id: t.id, title: t.title, disc_num: t.disc_num, track_num: t.track_num })),
       })
       onSaved()
     } catch (e) {
@@ -208,25 +204,48 @@ export function EditorDrawer({ albumId, pal, accent, artistSuggestions, onClose,
               </div>
 
               <div style={fieldLabelStyle(pal)}>TRACKS</div>
+              <div style={{ display: 'flex', gap: 8, padding: '0 10px 5px', alignItems: 'center' }}>
+                <div style={{ width: 40, fontSize: 9.5, fontWeight: 600, letterSpacing: '.05em', color: pal.textFaint, textAlign: 'center' }}>
+                  DISC
+                </div>
+                <div style={{ width: 40, fontSize: 9.5, fontWeight: 600, letterSpacing: '.05em', color: pal.textFaint, textAlign: 'center' }}>
+                  #
+                </div>
+                <div style={{ flex: 1, fontSize: 9.5, fontWeight: 600, letterSpacing: '.05em', color: pal.textFaint }}>TITLE</div>
+              </div>
               <div style={{ border: `1px solid ${pal.cardBorder}`, borderRadius: 8, overflow: 'hidden' }}>
-                {draft.tracks.map((t, i) => (
-                  <div
-                    key={t.id}
-                    style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderBottom: `1px solid ${pal.divider}` }}
-                  >
-                    <div style={{ width: 34, fontSize: 11.5, fontFamily: 'ui-monospace,monospace', color: pal.textFaint }}>
-                      {posLabel(t)}
+                {draft.tracks.map((t, i) => {
+                  function updateTrack(fields: Partial<TrackDraft>) {
+                    const tracks = draft!.tracks.map((tr, idx) => (idx === i ? { ...tr, ...fields } : tr))
+                    setDraft({ ...draft!, tracks })
+                  }
+                  return (
+                    <div
+                      key={t.id}
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderBottom: `1px solid ${pal.divider}` }}
+                    >
+                      <input
+                        type="number"
+                        min={1}
+                        value={t.disc_num}
+                        onChange={(e) => updateTrack({ disc_num: parseInt(e.target.value, 10) || 1 })}
+                        style={smallNumberInputStyle(pal)}
+                      />
+                      <input
+                        type="number"
+                        min={0}
+                        value={t.track_num}
+                        onChange={(e) => updateTrack({ track_num: parseInt(e.target.value, 10) || 0 })}
+                        style={smallNumberInputStyle(pal)}
+                      />
+                      <input
+                        value={t.title}
+                        onChange={(e) => updateTrack({ title: e.target.value })}
+                        style={{ flex: 1, background: 'transparent', border: 'none', fontSize: 12.5, color: 'inherit', outline: 'none', padding: '3px 4px', borderRadius: 4 }}
+                      />
                     </div>
-                    <input
-                      value={t.title}
-                      onChange={(e) => {
-                        const tracks = draft.tracks.map((tr, idx) => (idx === i ? { ...tr, title: e.target.value } : tr))
-                        setDraft({ ...draft, tracks })
-                      }}
-                      style={{ flex: 1, background: 'transparent', border: 'none', fontSize: 12.5, color: 'inherit', outline: 'none', padding: '3px 4px', borderRadius: 4 }}
-                    />
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </>
           )}

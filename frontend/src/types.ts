@@ -60,7 +60,7 @@ export interface AlbumUpdateInput {
   compilation?: boolean
   comments?: string
   genres?: string[]
-  tracks?: { id: string; title: string }[]
+  tracks?: { id: string; title: string; disc_num: number; track_num: number }[]
 }
 
 export interface BulkUpdateInput {

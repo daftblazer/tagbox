@@ -197,7 +197,7 @@ def _album_file_context(conn, album_id: str):
     if not row:
         return None, []
     tracks = conn.execute(
-        "SELECT id, relpath, title FROM tracks WHERE album_id=? ORDER BY disc_num, track_num", (album_id,)
+        "SELECT id, relpath, title, disc_num, track_num FROM tracks WHERE album_id=? ORDER BY disc_num, track_num", (album_id,)
     ).fetchall()
     return row, tracks
 
@@ -208,13 +208,29 @@ def update_album(album_id: str, patch: AlbumUpdateIn) -> AlbumDetailOut | None:
     if not album:
         return None
 
-    track_title_map = {t.id: t.title for t in (patch.tracks or [])}
+    track_patch_map = {t.id: t for t in (patch.tracks or [])}
     for t in tracks:
+        track_patch = track_patch_map.get(t["id"])
+        if track_patch is None:
+            continue
         abspath = os.path.join(album["library_path"], t["relpath"])
-        new_title = track_title_map.get(t["id"])
-        if new_title is not None and new_title != t["title"]:
-            tagio.write_track_title(abspath, new_title)
-            conn.execute("UPDATE tracks SET title=? WHERE id=?", (new_title, t["id"]))
+        title_changed = track_patch.title != t["title"]
+        disc_changed = track_patch.disc_num != t["disc_num"]
+        track_num_changed = track_patch.track_num != t["track_num"]
+
+        if title_changed:
+            tagio.write_track_title(abspath, track_patch.title)
+        if disc_changed or track_num_changed:
+            tagio.write_track_position(
+                abspath,
+                disc_num=track_patch.disc_num if disc_changed else None,
+                track_num=track_patch.track_num if track_num_changed else None,
+            )
+        if title_changed or disc_changed or track_num_changed:
+            conn.execute(
+                "UPDATE tracks SET title=?, disc_num=?, track_num=? WHERE id=?",
+                (track_patch.title, track_patch.disc_num, track_patch.track_num, t["id"]),
+            )
 
     album_level_changed = any(v is not None for v in (patch.title, patch.album_artist, patch.artist, patch.year, patch.genres, patch.comments))
     if album_level_changed:

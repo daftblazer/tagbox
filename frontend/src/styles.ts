@@ -19,6 +19,19 @@ export const fieldLabelStyle = (pal: Palette): CSSProperties => ({
   marginBottom: 4,
 })
 
+export const smallNumberInputStyle = (pal: Palette): CSSProperties => ({
+  width: 40,
+  background: pal.inputBg,
+  border: `1px solid ${pal.inputBorder}`,
+  borderRadius: 5,
+  padding: '5px 4px',
+  fontSize: 12,
+  color: 'inherit',
+  outline: 'none',
+  fontFamily: 'ui-monospace,monospace',
+  textAlign: 'center',
+})
+
 export const buttonStyle = (pal: Palette, variant: 'primary' | 'default', accent: string, accentText: string): CSSProperties =>
   variant === 'primary'
     ? { flex: 1, textAlign: 'center', padding: 9, borderRadius: 7, fontSize: 13, cursor: 'pointer', background: accent, color: accentText, fontWeight: 600, border: 'none' }
