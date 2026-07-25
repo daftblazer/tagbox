@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { api } from './api'
 import { AlbumGrid } from './components/AlbumGrid'
+import { AlbumTree } from './components/AlbumTree'
 import { ArtistGrid } from './components/ArtistGrid'
 import { BulkEditModal } from './components/BulkEditModal'
 import { EditorDrawer } from './components/EditorDrawer'
@@ -9,7 +10,7 @@ import { OrganizeLooseFilesModal } from './components/OrganizeLooseFilesModal'
 import { SelectionBar } from './components/SelectionBar'
 import { Sidebar } from './components/Sidebar'
 import { Toolbar } from './components/Toolbar'
-import { PALETTES, accentForLibrary, type ThemeName } from './theme'
+import { ACTIVE_TEXT_ON_ACCENT, PALETTES, accentForLibrary, type ThemeName } from './theme'
 import type { Album, Artist, FolderArtist, Library, ViewMode } from './types'
 
 function useDebounced<T>(value: T, delayMs: number): T {
@@ -50,6 +51,7 @@ export default function App() {
   const [rescanning, setRescanning] = useState(false)
   const [artistSuggestions, setArtistSuggestions] = useState<string[]>([])
   const [organizeOpen, setOrganizeOpen] = useState(false)
+  const [artistAlbumView, setArtistAlbumView] = useState<'tree' | 'grid'>('tree')
 
   const currentLibrary = libraries.find((l) => l.id === libraryId) ?? null
   const accent = libraryId ? accentForLibrary(libraryId) : accentForLibrary('default')
@@ -57,6 +59,8 @@ export default function App() {
   const showArtistGrid = viewMode === 'artists' && !selectedArtist
   const showAlbumGrid = viewMode === 'albums' || (viewMode === 'artists' && !!selectedArtist)
   const showFolders = viewMode === 'folders'
+  // The Grid/Tree toggle only applies to one artist's discography, not the all-artists Albums tab.
+  const isArtistAlbumView = viewMode === 'artists' && !!selectedArtist
 
   const bumpListVersion = useCallback(() => setListVersion((v) => v + 1), [])
 
@@ -232,8 +236,30 @@ export default function App() {
 
               {showArtistGrid && <ArtistGrid pal={pal} artists={artists} onOpen={openArtist} />}
 
-              {showAlbumGrid && (
-                <AlbumGrid
+              {isArtistAlbumView && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 14 }}>
+                  <div style={{ display: 'flex', background: pal.tabBarBg, border: `1px solid ${pal.tabBarBorder}`, borderRadius: 7, padding: 2 }}>
+                    {(['tree', 'grid'] as const).map((mode) => {
+                      const active = artistAlbumView === mode
+                      return (
+                        <div
+                          key={mode}
+                          onClick={() => setArtistAlbumView(mode)}
+                          style={{
+                            padding: '6px 12px', fontSize: 12.5, borderRadius: 5, cursor: 'pointer', textTransform: 'capitalize',
+                            background: active ? accent : 'transparent', color: active ? ACTIVE_TEXT_ON_ACCENT : pal.textSecondary,
+                          }}
+                        >
+                          {mode}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {showAlbumGrid && isArtistAlbumView && artistAlbumView === 'tree' ? (
+                <AlbumTree
                   pal={pal}
                   accent={accent}
                   albums={albums}
@@ -242,6 +268,18 @@ export default function App() {
                   onToggleSelect={toggleSelectAlbum}
                   onOpen={setEditingAlbumId}
                 />
+              ) : (
+                showAlbumGrid && (
+                  <AlbumGrid
+                    pal={pal}
+                    accent={accent}
+                    albums={albums}
+                    selectMode={selectMode}
+                    selectedIds={selectedIds}
+                    onToggleSelect={toggleSelectAlbum}
+                    onOpen={setEditingAlbumId}
+                  />
+                )
               )}
 
               {showFolders && <FolderView pal={pal} folders={folders} onOpenAlbum={setEditingAlbumId} />}
