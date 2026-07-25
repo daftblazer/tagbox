@@ -11,9 +11,13 @@ interface Props {
   onSelectLibrary: (id: string) => void
   onRescan: () => void
   rescanning: boolean
+  onOrganizeLooseFiles: () => void
 }
 
-export function Sidebar({ pal, theme, onToggleTheme, libraries, libraryId, currentLibrary, onSelectLibrary, onRescan, rescanning }: Props) {
+export function Sidebar({
+  pal, theme, onToggleTheme, libraries, libraryId, currentLibrary, onSelectLibrary, onRescan, rescanning,
+  onOrganizeLooseFiles,
+}: Props) {
   return (
     <div
       style={{
@@ -94,8 +98,11 @@ export function Sidebar({ pal, theme, onToggleTheme, libraries, libraryId, curre
           >
             {currentLibrary.path}
           </div>
-          <div onClick={onRescan} style={{ fontSize: 11.5, color: pal.textSecondary, cursor: 'pointer' }}>
+          <div onClick={onRescan} style={{ fontSize: 11.5, color: pal.textSecondary, cursor: 'pointer', marginBottom: 6 }}>
             {rescanning ? 'Rescanning…' : '↻ Rescan library'}
+          </div>
+          <div onClick={onOrganizeLooseFiles} style={{ fontSize: 11.5, color: pal.textSecondary, cursor: 'pointer' }}>
+            Organize loose files
           </div>
         </div>
       )}

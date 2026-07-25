@@ -76,3 +76,19 @@ class BulkUpdateIn(BaseModel):
     album_artist: str | None = None
     comments: str | None = None
     add_genres: list[str] | None = None
+
+
+class LooseFileOut(BaseModel):
+    relpath: str
+    artist_name: str
+    filename: str
+    suggested_folder: str
+
+
+class OrganizeLooseFilesIn(BaseModel):
+    relpaths: list[str]
+
+
+class OrganizeLooseFilesOut(BaseModel):
+    organized: list[str]
+    skipped: list[str]

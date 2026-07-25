@@ -1,7 +1,15 @@
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 
-from .. import config, repo, scanner
-from ..models import AlbumOut, ArtistOut, FolderArtist, LibraryOut
+from .. import config, organize, repo, scanner
+from ..models import (
+    AlbumOut,
+    ArtistOut,
+    FolderArtist,
+    LibraryOut,
+    LooseFileOut,
+    OrganizeLooseFilesIn,
+    OrganizeLooseFilesOut,
+)
 
 router = APIRouter(prefix="/api/libraries", tags=["libraries"])
 
@@ -48,3 +56,17 @@ def get_folders(library_id: str) -> list[FolderArtist]:
 @router.get("/{library_id}/search")
 def search(library_id: str, q: str) -> dict:
     return repo.search_library(library_id, q)
+
+
+@router.get("/{library_id}/loose-files", response_model=list[LooseFileOut])
+def get_loose_files(library_id: str) -> list[LooseFileOut]:
+    lib = _lib_config_or_404(library_id)
+    return organize.find_loose_files(lib)
+
+
+@router.post("/{library_id}/organize-loose-files", response_model=OrganizeLooseFilesOut)
+def organize_loose_files(library_id: str, body: OrganizeLooseFilesIn, background_tasks: BackgroundTasks) -> OrganizeLooseFilesOut:
+    lib = _lib_config_or_404(library_id)
+    organized, skipped = organize.organize_loose_files(lib, body.relpaths)
+    background_tasks.add_task(scanner.scan_library, lib)
+    return OrganizeLooseFilesOut(organized=organized, skipped=skipped)

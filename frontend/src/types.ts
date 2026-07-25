@@ -71,3 +71,15 @@ export interface BulkUpdateInput {
 }
 
 export type ViewMode = 'artists' | 'albums' | 'folders'
+
+export interface LooseFile {
+  relpath: string
+  artist_name: string
+  filename: string
+  suggested_folder: string
+}
+
+export interface OrganizeLooseFilesResult {
+  organized: string[]
+  skipped: string[]
+}

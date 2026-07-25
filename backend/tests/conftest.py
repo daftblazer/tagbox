@@ -56,6 +56,15 @@ def library_root(tmp_path, monkeypatch):
 
 
 @pytest.fixture()
+def library_root_with_loose_file(library_root):
+    _make_track(
+        library_root / "Boards of Canada" / "B-Side Single.mp3",
+        title="B-Side Single", artist="Boards of Canada", date="1999", genre="Electronic",
+    )
+    return library_root
+
+
+@pytest.fixture()
 def db_conn(library_root):
     from app import db as db_module
 

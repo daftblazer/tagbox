@@ -5,6 +5,7 @@ import { ArtistGrid } from './components/ArtistGrid'
 import { BulkEditModal } from './components/BulkEditModal'
 import { EditorDrawer } from './components/EditorDrawer'
 import { FolderView } from './components/FolderView'
+import { OrganizeLooseFilesModal } from './components/OrganizeLooseFilesModal'
 import { SelectionBar } from './components/SelectionBar'
 import { Sidebar } from './components/Sidebar'
 import { Toolbar } from './components/Toolbar'
@@ -48,6 +49,7 @@ export default function App() {
   const [bulkOpen, setBulkOpen] = useState(false)
   const [rescanning, setRescanning] = useState(false)
   const [artistSuggestions, setArtistSuggestions] = useState<string[]>([])
+  const [organizeOpen, setOrganizeOpen] = useState(false)
 
   const currentLibrary = libraries.find((l) => l.id === libraryId) ?? null
   const accent = libraryId ? accentForLibrary(libraryId) : accentForLibrary('default')
@@ -194,6 +196,7 @@ export default function App() {
         onSelectLibrary={selectLibrary}
         onRescan={rescan}
         rescanning={rescanning}
+        onOrganizeLooseFiles={() => setOrganizeOpen(true)}
       />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
@@ -281,6 +284,22 @@ export default function App() {
             setSelectMode(false)
             setSelectedIds(new Set())
             bumpListVersion()
+          }}
+        />
+      )}
+
+      {organizeOpen && libraryId && (
+        <OrganizeLooseFilesModal
+          libraryId={libraryId}
+          pal={pal}
+          accent={accent}
+          onClose={() => setOrganizeOpen(false)}
+          onOrganized={() => {
+            // The server rescans in the background after moving files; give it a moment.
+            setTimeout(() => {
+              reloadLibraries()
+              bumpListVersion()
+            }, 1500)
           }}
         />
       )}

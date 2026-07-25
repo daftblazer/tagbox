@@ -6,6 +6,8 @@ import type {
   BulkUpdateInput,
   FolderArtist,
   Library,
+  LooseFile,
+  OrganizeLooseFilesResult,
 } from './types'
 
 const BASE = '/api'
@@ -41,6 +43,9 @@ export const api = {
     req<Album[]>(`/libraries/${libraryId}/albums${qs({ artist_id: opts.artistId, search: opts.search })}`),
   folders: (libraryId: string) => req<FolderArtist[]>(`/libraries/${libraryId}/folders`),
   artistNames: (libraryId: string) => req<string[]>(`/libraries/${libraryId}/artist-names`),
+  looseFiles: (libraryId: string) => req<LooseFile[]>(`/libraries/${libraryId}/loose-files`),
+  organizeLooseFiles: (libraryId: string, relpaths: string[]) =>
+    req<OrganizeLooseFilesResult>(`/libraries/${libraryId}/organize-loose-files`, jsonInit('POST', { relpaths })),
 
   album: (albumId: string) => req<AlbumDetail>(`/albums/${albumId}`),
   updateAlbum: (albumId: string, patch: AlbumUpdateInput) =>
