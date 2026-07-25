@@ -79,7 +79,7 @@ export function AlbumTree({ pal, accent, albums, selectMode, selectedIds, onTogg
   }
 
   const COVER_SIZE = 108
-  const TRACK_INDENT = 20 + COVER_SIZE + 16 + 14
+  const CARD_PADDING = 14
 
   return (
     <div style={{ maxWidth: 760, margin: '0 auto' }}>
@@ -92,7 +92,7 @@ export function AlbumTree({ pal, accent, albums, selectMode, selectedIds, onTogg
             <div
               onClick={() => (selectMode ? onToggleSelect(album.id) : onOpen(album.id))}
               style={{
-                display: 'flex', alignItems: 'center', gap: 16, padding: 14, borderRadius: 12, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 16, padding: CARD_PADDING, borderRadius: 12, cursor: 'pointer',
                 background: pal.cardBg, border: `1px solid ${isSelected ? accent : pal.cardBorder}`,
               }}
             >
@@ -141,16 +141,16 @@ export function AlbumTree({ pal, accent, albums, selectMode, selectedIds, onTogg
             </div>
 
             {isOpen && (
-              <div style={{ paddingLeft: TRACK_INDENT, paddingRight: 14, paddingTop: 10 }}>
-                {tracks === 'loading' && <div style={{ fontSize: 12.5, color: pal.textFaint, padding: '6px 10px' }}>Loading…</div>}
+              <div style={{ paddingLeft: CARD_PADDING, paddingRight: CARD_PADDING, paddingTop: 10 }}>
+                {tracks === 'loading' && <div style={{ fontSize: 12.5, color: pal.textFaint }}>Loading…</div>}
                 {tracks === 'error' && (
-                  <div style={{ fontSize: 12.5, color: 'oklch(65% 0.19 25)', padding: '6px 10px' }}>Failed to load tracks.</div>
+                  <div style={{ fontSize: 12.5, color: 'oklch(65% 0.19 25)' }}>Failed to load tracks.</div>
                 )}
                 {Array.isArray(tracks) && tracks.length > 0 && (
                   <div>
                     <div
                       style={{
-                        display: 'grid', gridTemplateColumns: TRACK_COLUMNS, gap: 10, padding: '0 10px 6px',
+                        display: 'grid', gridTemplateColumns: TRACK_COLUMNS, gap: 10, padding: '0 0 6px',
                         borderBottom: `1px solid ${pal.divider}`, marginBottom: 2,
                       }}
                     >
@@ -165,7 +165,7 @@ export function AlbumTree({ pal, accent, albums, selectMode, selectedIds, onTogg
                         key={t.id}
                         style={{
                           display: 'grid', gridTemplateColumns: TRACK_COLUMNS, gap: 10, alignItems: 'center',
-                          padding: '7px 10px', borderRadius: 6,
+                          padding: '7px 0', borderRadius: 6,
                         }}
                       >
                         <div style={{ fontSize: 12, fontFamily: 'ui-monospace,monospace', color: pal.textFaint }}>{posLabel(t)}</div>
