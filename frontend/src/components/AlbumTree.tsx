@@ -71,18 +71,21 @@ export function AlbumTree({ pal, accent, albums, selectMode, selectedIds, onTogg
     return <div style={{ fontSize: 13, color: pal.textFaint, padding: '40px 0', textAlign: 'center' }}>No albums found.</div>
   }
 
+  const COVER_SIZE = 108
+  const TRACK_INDENT = 20 + COVER_SIZE + 16 + 14
+
   return (
-    <div style={{ maxWidth: 640 }}>
+    <div style={{ maxWidth: 760, margin: '0 auto' }}>
       {albums.map((album) => {
         const isOpen = expanded.has(album.id)
         const isSelected = selectedIds.has(album.id)
         const tracks = tracksByAlbum[album.id]
         return (
-          <div key={album.id} style={{ marginBottom: 4 }}>
+          <div key={album.id} style={{ marginBottom: 10 }}>
             <div
               onClick={() => (selectMode ? onToggleSelect(album.id) : onOpen(album.id))}
               style={{
-                display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 7, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 16, padding: 14, borderRadius: 12, cursor: 'pointer',
                 background: pal.cardBg, border: `1px solid ${isSelected ? accent : pal.cardBorder}`,
               }}
             >
@@ -92,7 +95,7 @@ export function AlbumTree({ pal, accent, albums, selectMode, selectedIds, onTogg
                   toggle(album.id)
                 }}
                 style={{
-                  width: 16, fontSize: 11, color: pal.textMuted, flex: 'none', cursor: 'pointer',
+                  width: 20, fontSize: 13, color: pal.textMuted, flex: 'none', cursor: 'pointer', textAlign: 'center',
                   transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)',
                 }}
               >
@@ -101,43 +104,50 @@ export function AlbumTree({ pal, accent, albums, selectMode, selectedIds, onTogg
               {selectMode && (
                 <div
                   style={{
-                    width: 16, height: 16, borderRadius: 4, border: `1.5px solid ${pal.checkboxBorderDefault}`,
+                    width: 18, height: 18, borderRadius: 5, border: `1.5px solid ${pal.checkboxBorderDefault}`,
                     background: isSelected ? accent : 'transparent', display: 'flex', alignItems: 'center',
                     justifyContent: 'center', flex: 'none',
                   }}
                 >
-                  {isSelected && <div style={{ color: '#fff', fontSize: 10.5, fontWeight: 700 }}>✓</div>}
+                  {isSelected && <div style={{ color: '#fff', fontSize: 11.5, fontWeight: 700 }}>✓</div>}
                 </div>
               )}
-              <div style={{ width: 32, height: 32, flex: 'none', borderRadius: 5, overflow: 'hidden' }}>
-                <CoverImage coverId={album.cover_id} placeholder={album.title} pal={pal} />
+              <div style={{ width: COVER_SIZE, height: COVER_SIZE, flex: 'none', borderRadius: 8, overflow: 'hidden' }}>
+                <CoverImage coverId={album.cover_id} placeholder={album.title} pal={pal} radius={8} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <div style={{ fontSize: 17, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {album.title}
                 </div>
-                <div style={{ fontSize: 11, color: pal.textFaint }}>{album.year}</div>
+                <div style={{ fontSize: 13, color: pal.textFaint, marginTop: 2 }}>{album.year}</div>
+                <div style={{ display: 'flex', gap: 5, marginTop: 8, flexWrap: 'wrap' }}>
+                  {album.genres.slice(0, 3).map((g) => (
+                    <div key={g} style={{ fontSize: 10.5, padding: '2.5px 8px', background: pal.chipBg, borderRadius: 100, color: pal.chipText }}>
+                      {g}
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div style={{ fontSize: 11, color: pal.textFaint, flex: 'none' }}>
+              <div style={{ fontSize: 12, color: pal.textFaint, flex: 'none' }}>
                 {album.track_count} {album.track_count === 1 ? 'track' : 'tracks'}
               </div>
             </div>
 
             {isOpen && (
-              <div style={{ paddingLeft: 44 }}>
-                {tracks === 'loading' && <div style={{ fontSize: 12, color: pal.textFaint, padding: '6px 10px' }}>Loading…</div>}
+              <div style={{ paddingLeft: TRACK_INDENT, paddingTop: 6 }}>
+                {tracks === 'loading' && <div style={{ fontSize: 12.5, color: pal.textFaint, padding: '6px 10px' }}>Loading…</div>}
                 {tracks === 'error' && (
-                  <div style={{ fontSize: 12, color: 'oklch(65% 0.19 25)', padding: '6px 10px' }}>Failed to load tracks.</div>
+                  <div style={{ fontSize: 12.5, color: 'oklch(65% 0.19 25)', padding: '6px 10px' }}>Failed to load tracks.</div>
                 )}
                 {Array.isArray(tracks) &&
                   tracks.map((t) => (
-                    <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 10px' }}>
-                      <div style={{ width: 30, flex: 'none', fontSize: 11, fontFamily: 'ui-monospace,monospace', color: pal.textFaint }}>
+                    <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 10px' }}>
+                      <div style={{ width: 32, flex: 'none', fontSize: 12, fontFamily: 'ui-monospace,monospace', color: pal.textFaint }}>
                         {posLabel(t)}
                       </div>
                       <div
                         style={{
-                          fontSize: 12.5, color: pal.textSecondary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                          fontSize: 13.5, color: pal.textSecondary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                         }}
                       >
                         {t.title}
