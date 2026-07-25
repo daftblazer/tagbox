@@ -63,6 +63,19 @@ def test_bulk_update_adds_genre_to_multiple_albums(db_conn, library_root):
     assert all("Chill" in a.genres for a in results)
 
 
+def test_artist_names_dedupes_case_variants(db_conn, library_root):
+    _scan(library_root)
+    album = next(a for a in repo.list_albums("music") if a.artist == "Nils Frahm")
+
+    # A case-variant sneaks in via the album_artist tag on another album.
+    repo.update_album(album.id, AlbumUpdateIn(album_artist="NILS FRAHM"))
+
+    names = repo.list_artist_names("music")
+    lower_names = [n.lower() for n in names]
+    assert lower_names.count("nils frahm") == 1
+    assert "Boards of Canada" in names
+
+
 def test_removed_album_folder_is_pruned_on_rescan(db_conn, library_root):
     lib = _scan(library_root)
     assert len(repo.list_albums("music")) == 2

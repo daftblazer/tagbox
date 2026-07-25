@@ -3,6 +3,7 @@ import { api } from '../api'
 import { fieldLabelStyle, inputStyle } from '../styles'
 import { ACTIVE_TEXT_ON_ACCENT, type Palette } from '../theme'
 import type { AlbumDetail } from '../types'
+import { ArtistCombobox } from './ArtistCombobox'
 import { CoverImage } from './CoverImage'
 import { GenreEditor } from './GenreEditor'
 
@@ -10,6 +11,7 @@ interface Props {
   albumId: string
   pal: Palette
   accent: string
+  artistSuggestions: string[]
   onClose: () => void
   onSaved: () => void
 }
@@ -49,7 +51,7 @@ function posLabel(t: TrackDraft): string {
   return (t.disc_num > 1 ? t.disc_num + '.' : '') + String(t.track_num).padStart(2, '0')
 }
 
-export function EditorDrawer({ albumId, pal, accent, onClose, onSaved }: Props) {
+export function EditorDrawer({ albumId, pal, accent, artistSuggestions, onClose, onSaved }: Props) {
   const [draft, setDraft] = useState<Draft | null>(null)
   const [coverId, setCoverId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -152,14 +154,20 @@ export function EditorDrawer({ albumId, pal, accent, onClose, onSaved }: Props) 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
                 <div>
                   <div style={fieldLabelStyle(pal)}>ARTIST</div>
-                  <input value={draft.artist} onChange={(e) => setDraft({ ...draft, artist: e.target.value })} style={inputStyle(pal)} />
+                  <ArtistCombobox
+                    value={draft.artist}
+                    onChange={(v) => setDraft({ ...draft, artist: v })}
+                    suggestions={artistSuggestions}
+                    pal={pal}
+                  />
                 </div>
                 <div>
                   <div style={fieldLabelStyle(pal)}>ALBUM ARTIST</div>
-                  <input
+                  <ArtistCombobox
                     value={draft.album_artist}
-                    onChange={(e) => setDraft({ ...draft, album_artist: e.target.value })}
-                    style={inputStyle(pal)}
+                    onChange={(v) => setDraft({ ...draft, album_artist: v })}
+                    suggestions={artistSuggestions}
+                    pal={pal}
                   />
                 </div>
               </div>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { api } from '../api'
 import { fieldLabelStyle, inputStyle } from '../styles'
 import { ACTIVE_TEXT_ON_ACCENT, type Palette } from '../theme'
+import { ArtistCombobox } from './ArtistCombobox'
 import { CoverImage } from './CoverImage'
 import { GenreEditor } from './GenreEditor'
 
@@ -9,11 +10,12 @@ interface Props {
   ids: string[]
   pal: Palette
   accent: string
+  artistSuggestions: string[]
   onClose: () => void
   onApplied: () => void
 }
 
-export function BulkEditModal({ ids, pal, accent, onClose, onApplied }: Props) {
+export function BulkEditModal({ ids, pal, accent, artistSuggestions, onClose, onApplied }: Props) {
   const [albumArtist, setAlbumArtist] = useState('')
   const [comments, setComments] = useState('')
   const [genres, setGenres] = useState<string[]>([])
@@ -79,7 +81,7 @@ export function BulkEditModal({ ids, pal, accent, onClose, onApplied }: Props) {
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div>
               <div style={fieldLabelStyle(pal)}>ALBUM ARTIST</div>
-              <input value={albumArtist} onChange={(e) => setAlbumArtist(e.target.value)} placeholder="Unchanged" style={inputStyle(pal)} />
+              <ArtistCombobox value={albumArtist} onChange={setAlbumArtist} suggestions={artistSuggestions} pal={pal} placeholder="Unchanged" />
             </div>
           </div>
         </div>

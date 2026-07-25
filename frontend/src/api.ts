@@ -40,6 +40,7 @@ export const api = {
   albums: (libraryId: string, opts: { artistId?: string; search?: string } = {}) =>
     req<Album[]>(`/libraries/${libraryId}/albums${qs({ artist_id: opts.artistId, search: opts.search })}`),
   folders: (libraryId: string) => req<FolderArtist[]>(`/libraries/${libraryId}/folders`),
+  artistNames: (libraryId: string) => req<string[]>(`/libraries/${libraryId}/artist-names`),
 
   album: (albumId: string) => req<AlbumDetail>(`/albums/${albumId}`),
   updateAlbum: (albumId: string, patch: AlbumUpdateInput) =>

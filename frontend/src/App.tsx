@@ -47,6 +47,7 @@ export default function App() {
   const [editingAlbumId, setEditingAlbumId] = useState<string | null>(null)
   const [bulkOpen, setBulkOpen] = useState(false)
   const [rescanning, setRescanning] = useState(false)
+  const [artistSuggestions, setArtistSuggestions] = useState<string[]>([])
 
   const currentLibrary = libraries.find((l) => l.id === libraryId) ?? null
   const accent = libraryId ? accentForLibrary(libraryId) : accentForLibrary('default')
@@ -129,6 +130,20 @@ export default function App() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [libraryId, viewMode, selectedArtist, debouncedSearch, listVersion, showFolders, showAlbumGrid])
+
+  // Artist-name suggestions for the tag editors' autocomplete, refreshed whenever
+  // edits might introduce a new name.
+  useEffect(() => {
+    if (!libraryId) return
+    let cancelled = false
+    api
+      .artistNames(libraryId)
+      .then((names) => !cancelled && setArtistSuggestions(names))
+      .catch(() => !cancelled && setArtistSuggestions([]))
+    return () => {
+      cancelled = true
+    }
+  }, [libraryId, listVersion])
 
   function toggleSelectMode() {
     setSelectMode((v) => !v)
@@ -237,6 +252,7 @@ export default function App() {
           albumId={editingAlbumId}
           pal={pal}
           accent={accent}
+          artistSuggestions={artistSuggestions}
           onClose={() => setEditingAlbumId(null)}
           onSaved={() => {
             setEditingAlbumId(null)
@@ -258,6 +274,7 @@ export default function App() {
           ids={selectedIdList}
           pal={pal}
           accent={accent}
+          artistSuggestions={artistSuggestions}
           onClose={() => setBulkOpen(false)}
           onApplied={() => {
             setBulkOpen(false)

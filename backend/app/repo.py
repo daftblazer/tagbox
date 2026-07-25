@@ -32,6 +32,35 @@ def list_libraries() -> list[LibraryOut]:
     ]
 
 
+def list_artist_names(library_id: str) -> list[str]:
+    """Distinct artist-name-like strings already used in this library (folder
+    artist names + album_artist tags), deduped case-insensitively so e.g.
+    "Boards of Canada" and "boards of canada" collapse into one suggestion.
+    """
+    conn = db.get_conn()
+    rows = conn.execute(
+        """
+        SELECT name AS n FROM artists WHERE library_id = ?
+        UNION ALL
+        SELECT album_artist AS n FROM albums WHERE library_id = ? AND album_artist IS NOT NULL AND album_artist != ''
+        """,
+        (library_id, library_id),
+    ).fetchall()
+
+    variant_counts: dict[str, dict[str, int]] = {}
+    for r in rows:
+        name = (r["n"] or "").strip()
+        if not name:
+            continue
+        key = name.casefold()
+        bucket = variant_counts.setdefault(key, {})
+        bucket[name] = bucket.get(name, 0) + 1
+
+    canonical = [max(variants.items(), key=lambda kv: (kv[1], kv[0]))[0] for variants in variant_counts.values()]
+    canonical.sort(key=str.casefold)
+    return canonical
+
+
 def list_artists(library_id: str, search: str | None = None) -> list[ArtistOut]:
     conn = db.get_conn()
     sql = """
